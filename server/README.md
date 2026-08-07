@@ -1,9 +1,9 @@
-# Serveur relais — Player Tracker
+# Relay server — Player Tracker
 
-Relais WebSocket temps réel. Reçoit les positions des joueurs et les rediffuse
-aux membres de la même `room`.
+Real-time WebSocket relay. Receives player positions and rebroadcasts them to
+members of the same `room`.
 
-## Lancer en local
+## Run locally
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -11,96 +11,95 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-- `GET /` → état de santé (`{"status":"ok","rooms":N,"players":M}`).
-- `GET /map?room=<salon>` → **carte web live** (page HTML autonome, `map.html`).
-- `WS /ws` → point d'entrée temps réel.
+- `GET /` → health check (`{"status":"ok","rooms":N,"players":M}`).
+- `GET /map?room=<room>` → **live web map** (standalone HTML page, `map.html`).
+- `WS /ws` → real-time entry point.
 
-> ⚠️ Uvicorn n'est **pas** lancé en `--reload` : après toute modification de
-> `main.py`, arrête (`Ctrl+C`) et relance-le pour appliquer les changements.
+> ⚠️ Uvicorn is **not** started with `--reload`: after any change to `main.py`,
+> stop it (`Ctrl+C`) and restart it to apply the changes.
 
-## Tout-en-un : `./start.sh` ou `./start-ngrok.sh`
+## All-in-one: `./start.sh` or `./start-ngrok.sh`
 
-Le plus simple à chaque session : ces scripts lancent le serveur **et** le tunnel,
-et affichent directement l'URL `wss://…/ws` à coller dans le mod.
+Easiest for each session: these scripts start the server **and** the tunnel, and
+print the `wss://…/ws` URL to paste into the mod directly.
 
 ```bash
-./start.sh          # tunnel cloudflared (URL qui change à chaque lancement)
-./start-ngrok.sh    # tunnel ngrok (URL FIXE, voir la section ngrok plus bas)
+./start.sh          # cloudflared tunnel (URL changes on every launch)
+./start-ngrok.sh    # ngrok tunnel (FIXED URL, see the ngrok section below)
 ```
 
-Copie l'URL affichée, colle-la dans le mod (M → Serveur & salon…), partage-la à
-tes potes avec le même salon. Laisse la fenêtre ouverte, `Ctrl+C` pour tout
-arrêter. (Détail des étapes manuelles ci-dessous.)
+Copy the printed URL, paste it into the mod (M → Server & room…), share it with
+your friends using the same room. Keep the window open, `Ctrl+C` to stop
+everything. (Manual steps detailed below.)
 
-## Exposer à tes amis avec cloudflared (rapide, sans config réseau)
+## Expose to your friends with cloudflared (fast, no network config)
 
 ```bash
-# une seule fois : télécharger le binaire
+# once: download the binary
 curl -L -o ~/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
 chmod +x ~/cloudflared
 
-# terminal A : le serveur (voir ci-dessus, doit tourner)
-# terminal B : le tunnel vers le serveur local
+# terminal A: the server (see above, must be running)
+# terminal B: the tunnel to the local server
 ~/cloudflared tunnel --url http://localhost:8000
 ```
 
-cloudflared affiche un encadré avec une URL du type
-`https://xxxx-yyyy.trycloudflare.com`. Dans le mod, chacun met
-**`wss://xxxx-yyyy.trycloudflare.com/ws`** (le `https` devient `wss`, et on ajoute
-`/ws`).
+cloudflared prints a box with a URL like `https://xxxx-yyyy.trycloudflare.com`.
+In the mod, everyone uses **`wss://xxxx-yyyy.trycloudflare.com/ws`** (the `https`
+becomes `wss`, and you add `/ws`).
 
-- Garde **les deux terminaux ouverts** pendant que vous jouez.
-- Si tu redémarres uvicorn, **inutile de relancer cloudflared** (l'URL ne change
-  pas). Mais si tu relances **cloudflared**, l'URL change → il faut la remettre
-  partout.
-- Tester la chaîne complète : `curl https://xxxx-yyyy.trycloudflare.com/` doit
-  renvoyer `{"status":"ok",...}`.
+- Keep **both terminals open** while you play.
+- If you restart uvicorn, **no need to restart cloudflared** (the URL does not
+  change). But if you restart **cloudflared**, the URL changes → you must update
+  it everywhere.
+- Test the full chain: `curl https://xxxx-yyyy.trycloudflare.com/` should return
+  `{"status":"ok",...}`.
 
-## Alternative : ngrok (URL fixe)
+## Alternative: ngrok (fixed URL)
 
-ngrok expose aussi `localhost:8000`, mais offre un **domaine fixe gratuit** (1 par
-compte) — plus besoin de repartager l'URL à chaque session.
+ngrok also exposes `localhost:8000`, but offers a **free fixed domain** (1 per
+account) — no need to reshare the URL every session.
 
 ```bash
-# une seule fois :
-#  - crée un compte sur ngrok.com et récupère ton authtoken
-ngrok config add-authtoken TON_TOKEN
-#  - réclame ton domaine gratuit sur https://dashboard.ngrok.com/domains
-#    (nom auto-généré, ex. plucky-otter-1234.ngrok-free.dev)
+# once:
+#  - create an account on ngrok.com and grab your authtoken
+ngrok config add-authtoken YOUR_TOKEN
+#  - claim your free domain at https://dashboard.ngrok.com/domains
+#    (auto-generated name, e.g. plucky-otter-1234.ngrok-free.dev)
 
-# à chaque session (uvicorn tourne à côté) :
+# each session (uvicorn running alongside):
 ngrok http --url=https://plucky-otter-1234.ngrok-free.dev 8000
 ```
 
-Dans le mod : `wss://plucky-otter-1234.ngrok-free.dev/ws`. Le script
-`./start-ngrok.sh` fait tout d'un coup — mets ton domaine via
-`NGROK_DOMAIN=ton-domaine.ngrok-free.dev ./start-ngrok.sh` (ou édite la variable
-en haut du script).
+In the mod: `wss://plucky-otter-1234.ngrok-free.dev/ws`. The `./start-ngrok.sh`
+script does it all at once — set your domain with
+`NGROK_DOMAIN=your-domain.ngrok-free.dev ./start-ngrok.sh` (or edit the variable
+at the top of the script).
 
-> ⚠️ On n'utilise **qu'un seul** tunnel à la fois (cloudflared **ou** ngrok), pas
-> les deux. Choisir un nom de sous-domaine personnalisé est payant ; le domaine
-> auto-généré gratuit suffit largement.
+> ⚠️ Use **only one** tunnel at a time (cloudflared **or** ngrok, not both).
+> Choosing a custom subdomain name is paid; the free auto-generated domain is
+> more than enough.
 
-## Protocole
+## Protocol
 
-Client → serveur :
+Client → server:
 
 ```json
-// Publier sa position (le mod envoie ~4x/seconde tant qu'on partage)
-{ "type": "update", "room": "mon-salon", "name": "Steve",
+// Publish your position (the mod sends ~4x/second while sharing)
+{ "type": "update", "room": "my-room", "name": "Steve",
   "x": 12.5, "y": 64.0, "z": -30.2, "dim": "minecraft:overworld" }
 
-// Mode furtif : recevoir les autres SANS publier sa position.
-// Retire aussi immédiatement le joueur du roster s'il y était (disparition instantanée).
-{ "type": "subscribe", "room": "mon-salon" }
+// Stealth mode: receive others WITHOUT publishing your position.
+// Also immediately removes the player from the roster if present (instant vanish).
+{ "type": "subscribe", "room": "my-room" }
 
-// Waypoints PARTAGÉS (pour la carte + les autres joueurs). Remplace la liste du proprio.
-{ "type": "waypoints", "room": "mon-salon", "owner": "Steve", "waypoints": [
+// SHARED waypoints (for the map + other players). Replaces the owner's list.
+{ "type": "waypoints", "room": "my-room", "owner": "Steve", "waypoints": [
   { "name": "Base", "x": 100, "y": 64, "z": 200, "dim": "minecraft:overworld", "color": -1381654 }
 ] }
 ```
 
-Serveur → clients (rediffusé à chaque changement de la room) :
+Server → clients (rebroadcast on every change in the room):
 
 ```json
 { "type": "players",
@@ -109,41 +108,41 @@ Serveur → clients (rediffusé à chaque changement de la room) :
                    "color": -1381654, "owner": "Steve" } ] }
 ```
 
-Les waypoints d'un propriétaire sont retirés à sa déconnexion. Seuls les waypoints
-**partagés** sont envoyés (les privés ne quittent jamais le client).
+A player's waypoints are removed when they disconnect. Only **shared** waypoints
+are sent (private ones never leave the client).
 
-À la connexion, le mod envoie un `subscribe` (il reçoit donc les autres même en
-furtif). Un joueur sans mise à jour depuis `STALE_SECONDS` (20 s) est retiré
-automatiquement.
+On connect, the mod sends a `subscribe` (so it receives others even in stealth
+mode). A player with no update for `STALE_SECONDS` (20s) is removed
+automatically.
 
-## Déploiement
+## Deployment
 
-Sur un VPS derrière un reverse proxy avec TLS (fortement recommandé pour avoir
-du `wss://`). Exemple **Caddy** (`Caddyfile`) :
+On a VPS behind a reverse proxy with TLS (strongly recommended to get `wss://`).
+Example **Caddy** (`Caddyfile`):
 
 ```
-tracker.mondomaine.fr {
+tracker.mydomain.com {
     reverse_proxy 127.0.0.1:8000
 }
 ```
 
-Caddy gère le HTTPS automatiquement ; le mod utilise alors
-`wss://tracker.mondomaine.fr/ws`. Les plateformes type Railway / Render / Fly.io
-fournissent aussi du HTTPS/WSS clé en main — pointe simplement `serverUrl` sur
-l'URL fournie (`wss://...`).
+Caddy handles HTTPS automatically; the mod then uses
+`wss://tracker.mydomain.com/ws`. Platforms like Railway / Render / Fly.io also
+provide turnkey HTTPS/WSS — just point `serverUrl` at the provided URL
+(`wss://...`).
 
-Pour lancer en production :
+To run in production:
 
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
 ```
 
-> ⚠️ Garde **1 worker** : l'état des rooms est en mémoire et partagé entre les
-> connexions. Pour scaler sur plusieurs workers/instances, il faudrait un backend
-> partagé (ex. Redis pub/sub) — non nécessaire pour un usage entre amis.
+> ⚠️ Keep **1 worker**: room state is in memory and shared across connections. To
+> scale over multiple workers/instances, you would need a shared backend (e.g.
+> Redis pub/sub) — not needed for use among friends.
 
-## Sécurité
+## Security
 
-- Le `room` sert de secret partagé : choisis un code non devinable.
-- Utilise **wss://** (TLS) en production pour ne pas exposer les positions en clair.
-- Ajoute éventuellement un jeton d'authentification si le relais est public.
+- The `room` acts as a shared secret: pick a code that can't be guessed.
+- Use **wss://** (TLS) in production so positions aren't exposed in clear text.
+- Optionally add an authentication token if the relay is public.

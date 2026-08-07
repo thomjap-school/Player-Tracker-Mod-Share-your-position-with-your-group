@@ -1,117 +1,117 @@
 # Player Tracker
 
-Mod Minecraft **Fabric 1.21.11** (client) + **serveur relais Python** qui permet
-à un groupe de joueurs de voir en temps réel **la direction et la distance** des
-autres joueurs **qui ont le mod**.
+Minecraft **Fabric 1.21.11** mod (client) + **Python relay server** that lets a
+group of players see, in real time, **the direction and distance** of the other
+players **who have the mod**.
 
-C'est un système **opt-in** : seuls les joueurs qui installent le mod *et*
-utilisent le même code de salon (`room`) apparaissent. Le mod ne révèle jamais
-la position de joueurs qui ne participent pas, et **n'envoie rien au serveur
-Minecraft** (100 % client-side, aucun paquet). Il fonctionne sur n'importe quel
-serveur de jeu (même vanilla) car le partage passe par le relais.
+It is an **opt-in** system: only players who install the mod *and* use the same
+room code (`room`) show up. The mod never reveals the position of players who do
+not take part, and **sends nothing to the Minecraft server** (100% client-side,
+no packets). It works on any game server (even vanilla) because sharing goes
+through the relay.
 
 ```
 ┌────────────┐   position (WebSocket)   ┌──────────────┐
 │  Mod A     │ ───────────────────────► │              │
-│ (Fabric)   │ ◄─────────────────────── │  Serveur     │
-└────────────┘   positions des autres   │  relais      │
+│ (Fabric)   │ ◄─────────────────────── │  Relay       │
+└────────────┘   other players' pos     │  server      │
 ┌────────────┐                          │  (FastAPI)   │
 │  Mod B     │ ◄──────────────────────► │              │
 └────────────┘                          └──────────────┘
 ```
 
-## Fonctionnalités
+## Features
 
-- **HUD boussole** (haut de l'écran) : un repère coloré par joueur, positionné
-  selon sa direction.
-- **Liste « Joueurs suivis »** (à gauche) : flèche + distance + direction
-  cardinale, option coords exactes (X Y Z).
-- **Autre dimension** : le joueur apparaît dans la liste avec une pastille de
-  couleur et le nom de sa dimension (🟩 Surface / 🟥 Nether / 🟪 End), et il est
-  **exclu de la boussole**.
-- **Mode furtif (N)** : tu vois les autres, mais tu disparais **instantanément**
-  de leur radar (tu ne partages plus ta position).
-- **16 couleurs distinctes** + **indicateur de connexion** (point vert/rouge).
-- **Waypoints** : crée des points de repère (commandes `/tracker` ou GUI), colorés,
-  **privés par défaut** ou **partagés** au salon. Inclut :
-  - **Marqueurs de mort** automatiques (privés),
-  - **Faisceau 3D type beacon** au sol du waypoint (option, expérimental).
-- **Carte web live** (`/map`) : carte 2D temps réel du salon dans le navigateur,
-  avec **sélecteur de monde** (Overworld / Nether / End / dimensions custom).
-- **Éditeur de HUD en jeu** (touche M) : **déplacer** boussole / liste / indicateur
-  à la souris, les afficher/masquer, gérer les waypoints, régler serveur / salon /
-  pseudo — sans éditer de fichier.
-- **Langue automatique** : suit la langue du jeu (français, sinon **anglais**).
+- **Compass HUD** (top of the screen): a colored marker per player, positioned
+  by their direction.
+- **"Tracked players" list** (left side): arrow + distance + cardinal direction,
+  with an option for exact coordinates (X Y Z).
+- **Other dimension**: the player appears in the list with a colored dot and the
+  name of their dimension (🟩 Surface / 🟥 Nether / 🟪 End), and is **excluded
+  from the compass**.
+- **Stealth mode (N)**: you still see the others, but you **instantly** disappear
+  from their radar (you stop sharing your position).
+- **16 distinct colors** + a **connection indicator** (green/red dot).
+- **Waypoints**: create markers (via `/tracker` commands or the GUI), colored,
+  **private by default** or **shared** with the room. Includes:
+  - automatic **death markers** (private),
+  - **3D beacon-style beam** at the waypoint's base (optional, experimental).
+- **Live web map** (`/map`): real-time 2D map of the room in the browser, with a
+  **world selector** (Overworld / Nether / End / custom dimensions).
+- **In-game HUD editor** (M key): **drag** the compass / list / indicator with
+  the mouse, show/hide them, manage waypoints, set server / room / username —
+  without editing any file.
+- **Automatic language**: follows the game language (French, otherwise
+  **English**).
 
 ## Structure
 
-- `mod/` — le mod Fabric (Java 21, client-side uniquement).
-- `server/` — le serveur relais WebSocket (FastAPI + Uvicorn) + carte web (`map.html`).
+- `mod/` — the Fabric mod (Java 21, client-side only).
+- `server/` — the WebSocket relay server (FastAPI + Uvicorn) + web map (`map.html`).
 
-Le code du mod est rangé par responsabilité :
+The mod code is organized by responsibility:
 
 ```
 thomjap/playertracker/
-├── PlayerTrackerClient   entrée : câblage + tick + marqueur de mort
-├── config/               TrackerConfig (chargée/sauvée en JSON)
+├── PlayerTrackerClient   entry point: wiring + tick + death marker
+├── config/               TrackerConfig (loaded/saved as JSON)
 ├── model/                TrackedPlayer, Waypoint
-├── net/                  RelayClient (WebSocket + reconnexion)
-├── hud/                  TrackerHud (boussole/liste), WaypointBeamRenderer (faisceaux)
-├── screen/               écrans GUI (éditeur HUD, config serveur, waypoints)
+├── net/                  RelayClient (WebSocket + reconnection)
+├── hud/                  TrackerHud (compass/list), WaypointBeamRenderer (beams)
+├── screen/               GUI screens (HUD editor, server config, waypoints)
 ├── input/                TrackerKeybinds (H / M / N)
 ├── command/              TrackerCommands (/tracker …)
-└── util/                 Dimensions, Waypoints (helpers partagés)
+└── util/                 Dimensions, Waypoints (shared helpers)
 ```
 
-## Raccourcis en jeu
+## In-game shortcuts
 
-| Touche | Effet |
+| Key | Effect |
 |--------|-------|
-| **H** | Afficher / masquer le HUD (et les faisceaux) |
-| **M** | Éditeur : **glisser** pour déplacer boussole/liste/indicateur ; boutons ON/OFF ; boutons « Serveur & salon… » et « Waypoints » |
-| **N** | Mode furtif (voir les autres sans être vu), instantané |
-| *(non liée)* | Couper **tout** (déconnecte : tu ne vois plus personne) |
+| **H** | Show / hide the HUD (and the beams) |
+| **M** | Editor: **drag** to move the compass/list/indicator; ON/OFF buttons; "Server & room…" and "Waypoints" buttons |
+| **N** | Stealth mode (see others without being seen), instant |
+| *(unbound)* | Turn **everything** off (disconnects: you no longer see anyone) |
 
-Les touches sont modifiables dans **Options → Commandes → catégorie *Player
-Tracker***.
+Keys can be changed in **Options → Controls → *Player Tracker* category**.
 
-## Waypoints & commandes
+## Waypoints & commands
 
-Points de repère personnels, **privés par défaut**. Gérables par le **GUI**
-(M → **Waypoints** : onglets Tous / Privés / Partagés ; par ligne :
-partager, masquer, colorer, supprimer ; l'onglet Partagés montre aussi ceux des
-autres, avec option masquer) ou par les **commandes** :
+Personal markers, **private by default**. Manage them via the **GUI**
+(M → **Waypoints**: All / Private / Shared tabs; per row: share, hide, color,
+delete; the Shared tab also shows other players', with a hide option) or via the
+**commands**:
 
-| Commande | Effet |
+| Command | Effect |
 |----------|-------|
-| `/tracker add waypoint <x> <y> <z> [couleur] <nom>` | crée un waypoint (privé) |
-| `/tracker add sharewaypoint <x> <y> <z> [couleur] <nom>` | crée un waypoint **partagé** |
-| `/tracker add calcwaypoint <x> <y> <z> [couleur] <nom>` | crée le point **dans les 2 mondes** (Overworld ↔ Nether, ÷8/×8), partagé |
-| `/tracker share waypoint <nom>` | bascule privé ↔ partagé |
-| `/tracker change waypoint color <nom> <couleur>` | change la couleur |
-| `/tracker remove waypoint <nom>` · `/tracker list` | supprime · liste |
-| `/tracker beams on\|off` | faisceaux 3D |
+| `/tracker add waypoint <x> <y> <z> [color] <name>` | create a waypoint (private) |
+| `/tracker add sharewaypoint <x> <y> <z> [color] <name>` | create a **shared** waypoint |
+| `/tracker add calcwaypoint <x> <y> <z> [color] <name>` | create the point **in both worlds** (Overworld ↔ Nether, ÷8/×8), shared |
+| `/tracker share waypoint <name>` | toggle private ↔ shared |
+| `/tracker change waypoint color <name> <color>` | change the color |
+| `/tracker remove waypoint <name>` · `/tracker list` | delete · list |
+| `/tracker beams on\|off` | 3D beams |
 
-- **Partagé** = visible par le salon (en jeu chez les autres avec `(pseudo)`, et sur
-  la carte web). Les **marqueurs de mort restent privés**.
-- **Masquer** = cacher un waypoint de **ta** vue (HUD + faisceau) sans le supprimer ;
-  fonctionne aussi sur les waypoints partagés des autres.
-- **Couleurs** = celles de Minecraft (`red`, `gold`, `aqua`, `light_purple`…).
+- **Shared** = visible to the room (in-game for others as `(username)`, and on the
+  web map). **Death markers stay private**.
+- **Hide** = hide a waypoint from **your** view (HUD + beam) without deleting it;
+  also works on other players' shared waypoints.
+- **Colors** = Minecraft's (`red`, `gold`, `aqua`, `light_purple`…).
 
-## Carte web
+## Web map
 
-Le relais sert une page `/map` : carte 2D temps réel des joueurs et **waypoints
-partagés** du salon.
+The relay serves a `/map` page: a real-time 2D map of the room's players and
+**shared waypoints**.
 
 ```
-http://localhost:8000/map?room=mon-salon
-https://<ton-tunnel>/map?room=mon-salon
+http://localhost:8000/map?room=my-room
+https://<your-tunnel>/map?room=my-room
 ```
 
-Menu **Salon** + **Monde** (filtre par dimension) en haut. Consultable même sans le
-mod. Rien à installer côté visiteur.
+**Room** + **World** menus (filter by dimension) at the top. Viewable even
+without the mod. Nothing to install for the viewer.
 
-## 1. Lancer le serveur relais
+## 1. Start the relay server
 
 ```bash
 cd server
@@ -120,53 +120,53 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Vérifie qu'il tourne : http://localhost:8000/ → `{"status":"ok",...}`.
+Check that it is running: http://localhost:8000/ → `{"status":"ok",...}`.
 
-## 2. Compiler le mod
+## 2. Build the mod
 
-Nécessite le **JDK 21** (le wrapper Gradle est déjà inclus et utilise
-Gradle 9.6.1 — requis par Fabric Loom 1.17.17).
+Requires **JDK 21** (the Gradle wrapper is already included and uses Gradle
+9.6.1 — required by Fabric Loom 1.17.17).
 
 ```bash
 cd mod
-JAVA_HOME=/chemin/vers/jdk-21 ./gradlew build
+JAVA_HOME=/path/to/jdk-21 ./gradlew build
 ```
 
-Jar de sortie : `mod/build/libs/playertracker-1.0.0.jar`. Pour tester en dev sans
-installer : `./gradlew runClient`.
+Output jar: `mod/build/libs/playertracker-1.0.0.jar`. To test in dev without
+installing: `./gradlew runClient`.
 
-## 3. Installer le mod
+## 3. Install the mod
 
-Copie `playertracker-1.0.0.jar` dans le dossier `mods/` de ton instance, avec
-**Fabric Loader** et **Fabric API** (1.21.11). Selon ton launcher :
+Copy `playertracker-1.0.0.jar` into your instance's `mods/` folder, together with
+**Fabric Loader** and **Fabric API** (1.21.11). Depending on your launcher:
 
-- **Launcher officiel** : `.minecraft/mods/`
-- **Modrinth App** : `…/ModrinthApp/profiles/<nom du profil>/mods/`
-- **Prism / MultiMC** : `…/instances/<instance>/minecraft/mods/`
+- **Official launcher**: `.minecraft/mods/`
+- **Modrinth App**: `…/ModrinthApp/profiles/<profile name>/mods/`
+- **Prism / MultiMC**: `…/instances/<instance>/minecraft/mods/`
 
-> ⚠️ Installe-le dans le dossier `mods/` **de l'instance réellement lancée** par
-> ton launcher (pas forcément `.minecraft`).
+> ⚠️ Install it in the `mods/` folder **of the instance actually launched** by
+> your launcher (not necessarily `.minecraft`).
 
-## 4. Configurer (le plus simple : en jeu)
+## 4. Configure (easiest: in-game)
 
-En jeu : **M** → **« Serveur & salon… »**, puis renseigne :
+In game: **M** → **"Server & room…"**, then fill in:
 
-- **URL du serveur** : l'adresse de **ton** relais (ex. `wss://xxx.trycloudflare.com/ws`).
-- **Salon** : un code secret commun à tout le groupe.
-- **Pseudo** : vide = ton pseudo Minecraft.
+- **Server URL**: the address of **your** relay (e.g. `wss://xxx.trycloudflare.com/ws`).
+- **Room**: a secret code shared by the whole group.
+- **Username**: empty = your Minecraft username.
 
-Puis **Enregistrer & se reconnecter**. Tous les joueurs du même salon (et même
-URL) se voient.
+Then **Save & reconnect**. All players on the same room (and same URL) see each
+other.
 
 <details>
-<summary>Alternative : fichier de config</summary>
+<summary>Alternative: config file</summary>
 
-Au premier lancement, le mod crée `<dossier de jeu>/config/playertracker.json` :
+On first launch, the mod creates `<game folder>/config/playertracker.json`:
 
 ```json
 {
   "serverUrl": "ws://localhost:8000/ws",
-  "room": "mon-salon",
+  "room": "my-room",
   "playerName": "",
   "enabled": true,
   "sharePosition": true,
@@ -186,46 +186,46 @@ Au premier lancement, le mod crée `<dossier de jeu>/config/playertracker.json` 
 ```
 </details>
 
-## 5. Jouer avec des amis (hors localhost)
+## 5. Play with friends (outside localhost)
 
-Le serveur doit être joignable depuis Internet via un **tunnel**. Deux scripts
-tout-en-un dans `server/` lancent le serveur **et** le tunnel, puis affichent
-l'URL `wss://…/ws` à coller dans le mod. Toi et tes potes mettez la **même URL +
-le même salon** ; eux n'ont besoin ni de serveur ni de tunnel.
+The server must be reachable from the Internet through a **tunnel**. Two
+all-in-one scripts in `server/` start the server **and** the tunnel, then print
+the `wss://…/ws` URL to paste into the mod. You and your friends use the **same
+URL + the same room**; they need neither a server nor a tunnel.
 
-| Script | Tunnel | Compte | URL |
+| Script | Tunnel | Account | URL |
 |--------|--------|--------|-----|
-| `./start.sh` | cloudflared | aucun | **change** à chaque lancement |
-| `./start-ngrok.sh` | ngrok | gratuit (authtoken) | **fixe** (domaine statique) |
+| `./start.sh` | cloudflared | none | **changes** on every launch |
+| `./start-ngrok.sh` | ngrok | free (authtoken) | **fixed** (static domain) |
 
-**cloudflared** (le plus rapide, aucun compte) :
+**cloudflared** (fastest, no account):
 ```bash
-# une seule fois : télécharger cloudflared
+# once: download cloudflared
 curl -L -o ~/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
 chmod +x ~/cloudflared
 ./start.sh
 ```
 
-**ngrok** (URL fixe, compte gratuit) :
+**ngrok** (fixed URL, free account):
 ```bash
-# une seule fois : ngrok config add-authtoken TON_TOKEN
-# + réclame ton domaine gratuit sur https://dashboard.ngrok.com/domains
-cd server && cp .env.example .env      # puis mets ton domaine dans .env
+# once: ngrok config add-authtoken YOUR_TOKEN
+# + claim your free domain at https://dashboard.ngrok.com/domains
+cd server && cp .env.example .env      # then put your domain in .env
 ./start-ngrok.sh
 ```
 
-> `server/.env` (ton domaine, tes réglages locaux) n'est **pas** versionné — c'est
-> le `.env.example` qui sert de modèle.
+> `server/.env` (your domain, your local settings) is **not** versioned — the
+> `.env.example` serves as the template.
 
-Dans les deux cas, l'URL affichée est déjà en `wss://…/ws`, prête à coller dans
-le mod (**M → Serveur & salon…**). Garde la fenêtre ouverte pendant la partie.
+In both cases, the printed URL is already `wss://…/ws`, ready to paste into the
+mod (**M → Server & room…**). Keep the window open during the game.
 
-> Pour du 100 % durable (sans garder ton PC allumé), héberge `server/` sur un VPS
-> ou Railway/Render en `wss://` — voir [server/README.md](server/README.md).
+> For a fully persistent setup (without keeping your PC on), host `server/` on a
+> VPS or Railway/Render over `wss://` — see [server/README.md](server/README.md).
 
 ## Versions
 
-| Composant | Version |
+| Component | Version |
 |-----------|---------|
 | Minecraft | 1.21.11 |
 | Fabric Loader | 0.19.3 |
