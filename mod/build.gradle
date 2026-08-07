@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.18.0-alpha.13'
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
 version = project.mod_version
@@ -18,12 +18,13 @@ repositories {
 }
 
 dependencies {
+	// Minecraft 26.1+ ships unobfuscated, so no mappings are needed and Loom
+	// does not remap: plain implementation instead of modImplementation.
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	// Fabric API.
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 processResources {
@@ -38,7 +39,6 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-	// Force Gradle to build/run against JDK 21 even if the default JDK is newer.
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(25)
 	}
