@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "playertracker",
+	"version": "${version}",
+	"name": "Player Tracker",
+	"description": "Affiche en temps réel la direction et la distance des autres joueurs qui ont le mod, via un serveur relais. Système opt-in.",
+	"authors": [
+		"thomjap"
+	],
+	"contact": {},
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"thomjap.playertracker.PlayerTrackerClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

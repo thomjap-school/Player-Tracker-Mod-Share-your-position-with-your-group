@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Player Tracker — Carte</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0e1116; color: #e6e6e6;
+    font-family: system-ui, sans-serif; overflow: hidden; }
+  #bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; display: flex;
+    align-items: center; gap: 12px; padding: 0 14px; background: #171b22;
+    border-bottom: 1px solid #262c36; z-index: 10; }
+  #bar strong { color: #6fd08c; }
+  #bar input { background: #0e1116; border: 1px solid #333b47; color: #e6e6e6;
+    padding: 6px 8px; border-radius: 6px; width: 180px; }
+  #bar select { background: #0e1116; border: 1px solid #333b47; color: #e6e6e6;
+    padding: 6px 8px; border-radius: 6px; }
+  #bar button { background: #2a3340; border: 1px solid #3a4552; color: #e6e6e6;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  #bar button:hover { background: #33404f; }
+  #status { margin-left: auto; font-size: 13px; color: #9aa4b2; }
+  #dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: #d4483b; margin-right: 5px; vertical-align: middle; }
+  #dot.ok { background: #3fd44b; }
+  canvas { position: fixed; top: 48px; left: 0; width: 100vw; height: calc(100vh - 48px);
+    display: block; }
+  #empty { position: fixed; inset: 48px 0 0 0; display: flex; align-items: center;
+    justify-content: center; color: #6b7480; font-size: 15px; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <strong>Player Tracker</strong>
+    <label>Salon <input id="room" placeholder="mon-salon"></label>
+    <button id="join">Rejoindre</button>
+    <label>Monde <select id="dim"></select></label>
+    <span id="status"><span id="dot"></span><span id="statustext">connexion…</span></span>
+  </div>
+  <canvas id="cv"></canvas>
+  <div id="empty">En attente de joueurs dans ce salon…</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+let room = (params.get('room') || 'mon-salon').slice(0, 64);
+let players = [];
+let waypoints = [];
+let selectedDim = null;
+let ws = null;
+
+const roomInput = document.getElementById('room');
+const dot = document.getElementById('dot');
+const statustext = document.getElementById('statustext');
+const empty = document.getElementById('empty');
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const dimSelect = document.getElementById('dim');
+roomInput.value = room;
+dimSelect.onchange = () => { selectedDim = dimSelect.value; draw(); };
+
+function dimLabel(d) {
+  if (!d) return '?';
+  if (d === 'minecraft:overworld') return 'Overworld';
+  if (d === 'minecraft:the_nether') return 'Nether';
+  if (d === 'minecraft:the_end') return 'End';
+  const i = d.indexOf(':');
+  const ns = i >= 0 ? d.slice(0, i) : 'minecraft';
+  const path = i >= 0 ? d.slice(i + 1) : d;
+  return ns === 'minecraft' ? path : path + ' (' + ns + ')';
+}
+function updateDims() {
+  const dims = new Set(['minecraft:overworld', 'minecraft:the_nether', 'minecraft:the_end']);
+  for (const p of players) dims.add(p.dim);
+  for (const w of waypoints) dims.add(w.dim);
+  if (selectedDim === null || !dims.has(selectedDim)) {
+    selectedDim = dims.has('minecraft:overworld')
+      ? 'minecraft:overworld' : (dims.values().next().value || null);
+  }
+  const sorted = [...dims].sort();
+  dimSelect.innerHTML = '';
+  for (const d of sorted) {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = dimLabel(d);
+    if (d === selectedDim) opt.selected = true;
+    dimSelect.appendChild(opt);
+  }
+}
+
+function colorFor(name) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return 'hsl(' + (h % 360) + ', 70%, 62%)';
+}
+function argb(c) {
+  const v = ((c >>> 0) & 0xFFFFFF);
+  return '#' + v.toString(16).padStart(6, '0');
+}
+function shortDim(d) {
+  if (!d) return '';
+  const p = d.split(':').pop();
+  if (p === 'overworld') return '';
+  if (p === 'the_nether') return 'Nether';
+  if (p === 'the_end') return 'End';
+  return p;
+}
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(proto + '://' + location.host + '/ws');
+  ws.onopen = () => {
+    setStatus(true, 'connecté');
+    ws.send(JSON.stringify({ type: 'subscribe', room }));
+  };
+  ws.onmessage = (e) => {
+    let msg; try { msg = JSON.parse(e.data); } catch (_) { return; }
+    if (msg.type === 'players') { players = msg.players || []; waypoints = msg.waypoints || []; updateDims(); draw(); }
+  };
+  ws.onclose = () => { setStatus(false, 'reconnexion…'); setTimeout(connect, 2000); };
+  ws.onerror = () => { try { ws.close(); } catch (_) {} };
+}
+function setStatus(ok, text) {
+  dot.classList.toggle('ok', ok);
+  statustext.textContent = text + (ok ? ' · salon « ' + room + ' »' : '');
+}
+function joinRoom() {
+  room = (roomInput.value.trim() || 'mon-salon').slice(0, 64);
+  history.replaceState(null, '', '?room=' + encodeURIComponent(room));
+  players = []; waypoints = []; selectedDim = null; updateDims(); draw();
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'subscribe', room }));
+    setStatus(true, 'connecté');
+  }
+}
+document.getElementById('join').onclick = joinRoom;
+roomInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(); });
+
+function draw() {
+  const W = cv.width = cv.clientWidth;
+  const H = cv.height = cv.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+  const ps = players.filter(p => p.dim === selectedDim);
+  const wps = waypoints.filter(w => w.dim === selectedDim);
+  const items = ps.concat(wps);
+  empty.style.display = items.length ? 'none' : 'flex';
+  if (!items.length) return;
+
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const p of items) {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+  }
+  const pad = 60;
+  const spanX = Math.max(40, maxX - minX);
+  const spanZ = Math.max(40, maxZ - minZ);
+  const scale = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanZ);
+  const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
+  const sx = (x) => W / 2 + (x - cx) * scale;
+  const sy = (z) => H / 2 + (z - cz) * scale;
+
+  // grille (tous les 100 blocs)
+  ctx.strokeStyle = '#1c222b'; ctx.lineWidth = 1;
+  const step = 100;
+  const gx0 = Math.floor((cx - W / 2 / scale) / step) * step;
+  const gx1 = cx + W / 2 / scale;
+  for (let gx = gx0; gx <= gx1; gx += step) { const X = sx(gx); ctx.beginPath(); ctx.moveTo(X, 0); ctx.lineTo(X, H); ctx.stroke(); }
+  const gz0 = Math.floor((cz - H / 2 / scale) / step) * step;
+  const gz1 = cz + H / 2 / scale;
+  for (let gz = gz0; gz <= gz1; gz += step) { const Y = sy(gz); ctx.beginPath(); ctx.moveTo(0, Y); ctx.lineTo(W, Y); ctx.stroke(); }
+
+  // Nord (−Z) en haut
+  ctx.fillStyle = '#5a6472'; ctx.font = '12px sans-serif';
+  ctx.fillText('N ↑ (−Z)', 12, 66);
+
+  // waypoints (losanges de leur couleur)
+  for (const w of wps) {
+    const X = sx(w.x), Y = sy(w.z);
+    ctx.save();
+    ctx.translate(X, Y); ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = argb(w.color); ctx.fillRect(-5, -5, 10, 10);
+    ctx.strokeStyle = '#0e1116'; ctx.lineWidth = 2; ctx.strokeRect(-5, -5, 10, 10);
+    ctx.restore();
+    ctx.fillStyle = '#cbd2db'; ctx.font = '12px sans-serif';
+    ctx.fillText('⚑ ' + w.name + (w.owner ? ' — ' + w.owner : ''), X + 9, Y + 4);
+  }
+
+  for (const p of ps) {
+    const X = sx(p.x), Y = sy(p.z);
+    ctx.beginPath(); ctx.arc(X, Y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = colorFor(p.name); ctx.fill();
+    ctx.strokeStyle = '#0e1116'; ctx.lineWidth = 2; ctx.stroke();
+    const label = p.name + '  (' + Math.round(p.x) + ', ' + Math.round(p.z) + ')';
+    ctx.fillStyle = '#e6e6e6'; ctx.font = '13px sans-serif';
+    ctx.fillText(label, X + 11, Y + 4);
+  }
+}
+
+window.addEventListener('resize', draw);
+setStatus(false, 'connexion…');
+connect();
+draw();
+</script>
+</body>
+</html>

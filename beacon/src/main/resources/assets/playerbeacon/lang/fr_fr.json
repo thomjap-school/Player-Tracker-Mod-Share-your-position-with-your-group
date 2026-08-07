@@ -1,0 +1,24 @@
+{
+	"key.categories.playerbeacon.main": "Player Beacon",
+	"key.playerbeacon.open_config": "Ouvrir les réglages du beacon",
+	"key.playerbeacon.toggle": "Activer/couper la diffusion",
+	"playerbeacon.on": "Beacon : diffusion de ta position activée",
+	"playerbeacon.off": "Beacon : diffusion coupée",
+
+	"playerbeacon.config.title": "Player Beacon — Serveur & salon",
+	"playerbeacon.config.save": "Enregistrer & se connecter",
+	"playerbeacon.config.close": "Fermer",
+	"playerbeacon.config.url_label": "URL du serveur (ex: wss://xxx.trycloudflare.com/ws)",
+	"playerbeacon.config.room_label": "Salon — le même que le groupe qui te suit",
+	"playerbeacon.config.name_label": "Pseudo (vide = ton pseudo Minecraft)",
+	"playerbeacon.config.saved": "Enregistré. Connexion à %s",
+	"playerbeacon.config.on": "Diffusion : ON",
+	"playerbeacon.config.off": "Diffusion : OFF",
+
+	"playerbeacon.cmd.added": "Waypoint partagé « %s » ajouté (%s %s %s)",
+	"playerbeacon.cmd.calc_added": "Waypoint lié « %s » créé dans les 2 mondes (%s %s %s)",
+	"playerbeacon.cmd.removed": "Waypoint « %s » retiré",
+	"playerbeacon.cmd.notfound": "Aucun waypoint « %s »",
+	"playerbeacon.cmd.empty": "Aucun waypoint.",
+	"playerbeacon.cmd.list_header": "%s waypoint(s) :"
+}

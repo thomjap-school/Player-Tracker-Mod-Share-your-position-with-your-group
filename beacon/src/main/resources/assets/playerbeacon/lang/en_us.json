@@ -1,0 +1,24 @@
+{
+	"key.categories.playerbeacon.main": "Player Beacon",
+	"key.playerbeacon.open_config": "Open beacon settings",
+	"key.playerbeacon.toggle": "Toggle broadcasting",
+	"playerbeacon.on": "Beacon: broadcasting your position",
+	"playerbeacon.off": "Beacon: broadcasting stopped",
+
+	"playerbeacon.config.title": "Player Beacon — Server & room",
+	"playerbeacon.config.save": "Save & connect",
+	"playerbeacon.config.close": "Close",
+	"playerbeacon.config.url_label": "Server URL (e.g. wss://xxx.trycloudflare.com/ws)",
+	"playerbeacon.config.room_label": "Room — same as the group tracking you",
+	"playerbeacon.config.name_label": "Name (leave empty = your Minecraft name)",
+	"playerbeacon.config.saved": "Saved. Connecting to %s",
+	"playerbeacon.config.on": "Broadcast: ON",
+	"playerbeacon.config.off": "Broadcast: OFF",
+
+	"playerbeacon.cmd.added": "Shared waypoint \"%s\" added (%s %s %s)",
+	"playerbeacon.cmd.calc_added": "Linked waypoint \"%s\" created in both worlds (%s %s %s)",
+	"playerbeacon.cmd.removed": "Waypoint \"%s\" removed",
+	"playerbeacon.cmd.notfound": "No waypoint \"%s\"",
+	"playerbeacon.cmd.empty": "No waypoints.",
+	"playerbeacon.cmd.list_header": "%s waypoint(s):"
+}

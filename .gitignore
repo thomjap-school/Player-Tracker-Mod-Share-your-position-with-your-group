@@ -1,0 +1,38 @@
+# --- Secrets / config locale (NE JAMAIS committer) ---
+.env
+*.local
+
+# --- Gradle / Fabric mods (le wrapper gradlew + gradle/ est gardé) ---
+mod/.gradle/
+mod/build/
+mod/run/
+mod/.loom-cache/
+beacon/.gradle/
+beacon/build/
+beacon/run/
+beacon/.loom-cache/
+.gradle/
+build/
+*.class
+
+# --- Python (serveur) ---
+server/__pycache__/
+server/.venv/
+server/venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# --- Binaires de tunnel (téléchargés localement) ---
+cloudflared
+ngrok
+*.tgz
+
+# --- IDE / OS ---
+.idea/
+*.iml
+.vscode/
+.settings/
+.DS_Store
+Thumbs.db
+*.log
