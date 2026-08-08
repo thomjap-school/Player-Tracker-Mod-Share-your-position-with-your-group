@@ -1,8 +1,8 @@
 package thomjap.playerbeacon.util;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
-/** Identifiants de dimensions + dimension courante. */
+/** Dimension identifiers + current dimension. */
 public final class Dimensions {
 	public static final String OVERWORLD = "minecraft:overworld";
 	public static final String NETHER = "minecraft:the_nether";
@@ -11,7 +11,7 @@ public final class Dimensions {
 	}
 
 	public static String current() {
-		MinecraftClient mc = MinecraftClient.getInstance();
-		return mc.world != null ? mc.world.getRegistryKey().getValue().toString() : OVERWORLD;
+		Minecraft mc = Minecraft.getInstance();
+		return mc.level != null ? mc.level.dimension().identifier().toString() : OVERWORLD;
 	}
 }

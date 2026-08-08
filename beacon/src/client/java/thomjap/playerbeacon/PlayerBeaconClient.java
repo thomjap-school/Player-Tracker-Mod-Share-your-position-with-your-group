@@ -2,7 +2,7 @@ package thomjap.playerbeacon;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import thomjap.playerbeacon.command.BeaconCommands;
@@ -11,9 +11,9 @@ import thomjap.playerbeacon.input.BeaconKeybind;
 import thomjap.playerbeacon.net.BeaconRelay;
 
 /**
- * Point d'entrée de Player Beacon : variante ÉMETTEUR SEUL de Player Tracker.
- * Diffuse périodiquement la position du joueur au relais, mais n'affiche ni ne
- * reçoit la position des autres.
+ * Entry point of Player Beacon: EMITTER-ONLY variant of Player Tracker.
+ * Periodically broadcasts the player position to the relay, but neither shows
+ * nor receives other players' positions.
  */
 public class PlayerBeaconClient implements ClientModInitializer {
 	public static final String MOD_ID = "playerbeacon";
@@ -24,7 +24,7 @@ public class PlayerBeaconClient implements ClientModInitializer {
 
 	private int tickCounter = 0;
 
-	/** À appeler après toute modification des waypoints pour les repartager. */
+	/** Call after any waypoint change to re-share them. */
 	public static void syncWaypoints() {
 		if (relay != null) {
 			relay.sendWaypoints();
@@ -35,8 +35,8 @@ public class PlayerBeaconClient implements ClientModInitializer {
 		if (config != null && config.playerName != null && !config.playerName.isBlank()) {
 			return config.playerName;
 		}
-		MinecraftClient mc = MinecraftClient.getInstance();
-		return mc.getSession() != null ? mc.getSession().getUsername() : "Player";
+		Minecraft mc = Minecraft.getInstance();
+		return mc.getUser() != null ? mc.getUser().getName() : "Player";
 	}
 
 	@Override
@@ -51,13 +51,13 @@ public class PlayerBeaconClient implements ClientModInitializer {
 		BeaconCommands.register();
 		ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
 
-		LOGGER.info("Player Beacon (émetteur seul) initialisé. Relais : {}", config.serverUrl);
+		LOGGER.info("Player Beacon (emitter-only) initialized. Relay: {}", config.serverUrl);
 	}
 
-	private void onClientTick(MinecraftClient mc) {
+	private void onClientTick(Minecraft mc) {
 		BeaconKeybind.handle(mc);
 
-		if (!config.enabled || mc.player == null || mc.world == null) {
+		if (!config.enabled || mc.player == null || mc.level == null) {
 			return;
 		}
 		tickCounter++;
@@ -66,7 +66,7 @@ public class PlayerBeaconClient implements ClientModInitializer {
 		}
 		tickCounter = 0;
 
-		String dim = mc.world.getRegistryKey().getValue().toString();
+		String dim = mc.level.dimension().identifier().toString();
 		relay.sendPosition(selfName(),
 				mc.player.getX(), mc.player.getY(), mc.player.getZ(), dim);
 	}

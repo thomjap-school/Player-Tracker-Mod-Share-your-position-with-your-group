@@ -5,16 +5,16 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.argument.ColorArgumentType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.commands.arguments.ColorArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import thomjap.playerbeacon.PlayerBeaconClient;
 import thomjap.playerbeacon.config.BeaconConfig;
 import thomjap.playerbeacon.model.Waypoint;
 import thomjap.playerbeacon.util.Dimensions;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 /**
  * Commandes de l'émetteur (tous les waypoints sont diffusés au salon) :
@@ -50,13 +50,13 @@ public final class BeaconCommands {
 		return literal(sub).then(argument("x", IntegerArgumentType.integer())
 				.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
-								.then(argument("color", ColorArgumentType.color())
+								.then(argument("color", ColorArgument.color())
 										.then(argument("name", StringArgumentType.greedyString())
 												.executes(ctx -> action.run(ctx.getSource(),
 														IntegerArgumentType.getInteger(ctx, "x"),
 														IntegerArgumentType.getInteger(ctx, "y"),
 														IntegerArgumentType.getInteger(ctx, "z"),
-														rgb(ctx.getArgument("color", Formatting.class)),
+														rgb(ctx.getArgument("color", ChatFormatting.class)),
 														StringArgumentType.getString(ctx, "name")))))
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> action.run(ctx.getSource(),
@@ -67,8 +67,8 @@ public final class BeaconCommands {
 												StringArgumentType.getString(ctx, "name")))))));
 	}
 
-	private static int rgb(Formatting f) {
-		Integer c = f.getColorValue();
+	private static int rgb(ChatFormatting f) {
+		Integer c = f.getColor();
 		return c != null ? (0xFF000000 | c) : Waypoint.DEFAULT_COLOR;
 	}
 
@@ -82,7 +82,7 @@ public final class BeaconCommands {
 		addOne(cfg, name, x, y, z, Dimensions.current(), color);
 		cfg.save();
 		PlayerBeaconClient.syncWaypoints();
-		src.sendFeedback(Text.translatable("playerbeacon.cmd.added", name, x, y, z));
+		src.sendFeedback(Component.translatable("playerbeacon.cmd.added", name, x, y, z));
 		return 1;
 	}
 
@@ -97,7 +97,7 @@ public final class BeaconCommands {
 		}
 		cfg.save();
 		PlayerBeaconClient.syncWaypoints();
-		src.sendFeedback(Text.translatable("playerbeacon.cmd.calc_added", name, x, y, z));
+		src.sendFeedback(Component.translatable("playerbeacon.cmd.calc_added", name, x, y, z));
 		return 1;
 	}
 
@@ -106,7 +106,7 @@ public final class BeaconCommands {
 		boolean removed = cfg.waypoints.removeIf(w -> w.name.equalsIgnoreCase(name));
 		cfg.save();
 		PlayerBeaconClient.syncWaypoints();
-		src.sendFeedback(Text.translatable(
+		src.sendFeedback(Component.translatable(
 				removed ? "playerbeacon.cmd.removed" : "playerbeacon.cmd.notfound", name));
 		return 1;
 	}
@@ -114,12 +114,12 @@ public final class BeaconCommands {
 	private static int list(FabricClientCommandSource src) {
 		BeaconConfig cfg = PlayerBeaconClient.config;
 		if (cfg.waypoints.isEmpty()) {
-			src.sendFeedback(Text.translatable("playerbeacon.cmd.empty"));
+			src.sendFeedback(Component.translatable("playerbeacon.cmd.empty"));
 			return 1;
 		}
-		src.sendFeedback(Text.translatable("playerbeacon.cmd.list_header", cfg.waypoints.size()));
+		src.sendFeedback(Component.translatable("playerbeacon.cmd.list_header", cfg.waypoints.size()));
 		for (Waypoint w : cfg.waypoints) {
-			src.sendFeedback(Text.literal(
+			src.sendFeedback(Component.literal(
 					" - " + w.name + "  (" + (int) w.x + " " + (int) w.y + " " + (int) w.z + ")"));
 		}
 		return 1;
