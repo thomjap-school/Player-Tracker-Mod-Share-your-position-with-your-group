@@ -9,6 +9,19 @@ base {
 	archivesName = project.archives_base_name
 }
 
+loom {
+	// MC 26.1: client-only Fabric API classes (ClientCommandManager,
+	// KeyBindingHelper, WorldRenderEvents, …) live in the client source set.
+	splitEnvironmentSourceSets()
+
+	mods {
+		"playertracker" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
 repositories {
 	maven {
 		name = 'Fabric'

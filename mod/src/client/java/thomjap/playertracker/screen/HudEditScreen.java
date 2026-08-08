@@ -3,15 +3,14 @@ package thomjap.playertracker.screen;
 import thomjap.playertracker.PlayerTrackerClient;
 import thomjap.playertracker.config.TrackerConfig;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 /**
- * Écran d'édition du HUD (touche M) : glisser pour déplacer la boussole, la
- * liste et l'indicateur de connexion ; molette pour les redimensionner ;
- * boutons pour les afficher/masquer. Enregistré dans la config.
+ * HUD edit screen (M key): drag to move the compass, the list and the connection
+ * indicator; buttons to show/hide them. Saved in the config.
  */
 public class HudEditScreen extends BaseTrackerScreen {
 	private static final int COMPASS_H = 12;
@@ -30,7 +29,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 	private double grabOffY;
 
 	public HudEditScreen() {
-		super(Text.translatable("playertracker.editor.title"));
+		super(Component.translatable("playertracker.editor.title"));
 	}
 
 	@Override
@@ -40,59 +39,59 @@ public class HudEditScreen extends BaseTrackerScreen {
 		int row1 = this.height - 100;
 		int row2 = this.height - 78;
 
-		this.addDrawableChild(ButtonWidget.builder(compassLabel(), b -> {
+		this.addRenderableWidget(Button.builder(compassLabel(), b -> {
 			TrackerConfig cfg = PlayerTrackerClient.config;
 			cfg.showCompass = !cfg.showCompass;
 			cfg.save();
 			b.setMessage(compassLabel());
-		}).dimensions(leftX, row1, 150, 20).build());
+		}).bounds(leftX, row1, 150, 20).build());
 
-		this.addDrawableChild(ButtonWidget.builder(listLabel(), b -> {
+		this.addRenderableWidget(Button.builder(listLabel(), b -> {
 			TrackerConfig cfg = PlayerTrackerClient.config;
 			cfg.showList = !cfg.showList;
 			cfg.save();
 			b.setMessage(listLabel());
-		}).dimensions(rightX, row1, 150, 20).build());
+		}).bounds(rightX, row1, 150, 20).build());
 
-		this.addDrawableChild(ButtonWidget.builder(statusLabel(), b -> {
+		this.addRenderableWidget(Button.builder(statusLabel(), b -> {
 			TrackerConfig cfg = PlayerTrackerClient.config;
 			cfg.showStatus = !cfg.showStatus;
 			cfg.save();
 			b.setMessage(statusLabel());
-		}).dimensions(leftX, row2, 150, 20).build());
+		}).bounds(leftX, row2, 150, 20).build());
 
-		this.addDrawableChild(ButtonWidget.builder(coordsLabel(), b -> {
+		this.addRenderableWidget(Button.builder(coordsLabel(), b -> {
 			TrackerConfig cfg = PlayerTrackerClient.config;
 			cfg.showCoords = !cfg.showCoords;
 			cfg.save();
 			b.setMessage(coordsLabel());
-		}).dimensions(rightX, row2, 150, 20).build());
+		}).bounds(rightX, row2, 150, 20).build());
 
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("playertracker.editor.server_button"),
-						b -> this.client.setScreen(new TrackerConfigScreen()))
-				.dimensions(this.width / 2 - 152, this.height - 52, 150, 20).build());
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("playertracker.waypoints.title"),
-						b -> this.client.setScreen(new WaypointsScreen()))
-				.dimensions(this.width / 2 + 2, this.height - 52, 150, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.editor.server_button"),
+						b -> this.minecraft.setScreen(new TrackerConfigScreen()))
+				.bounds(this.width / 2 - 152, this.height - 52, 150, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.waypoints.title"),
+						b -> this.minecraft.setScreen(new WaypointsScreen()))
+				.bounds(this.width / 2 + 2, this.height - 52, 150, 20).build());
 	}
 
-	private static Text toggleLabel(String key, boolean on) {
-		return Text.translatable(key, on ? "ON" : "OFF");
+	private static Component toggleLabel(String key, boolean on) {
+		return Component.translatable(key, on ? "ON" : "OFF");
 	}
 
-	private static Text compassLabel() {
+	private static Component compassLabel() {
 		return toggleLabel("playertracker.toggle.compass", PlayerTrackerClient.config.showCompass);
 	}
 
-	private static Text listLabel() {
+	private static Component listLabel() {
 		return toggleLabel("playertracker.toggle.list", PlayerTrackerClient.config.showList);
 	}
 
-	private static Text statusLabel() {
+	private static Component statusLabel() {
 		return toggleLabel("playertracker.toggle.status", PlayerTrackerClient.config.showStatus);
 	}
 
-	private static Text coordsLabel() {
+	private static Component coordsLabel() {
 		return toggleLabel("playertracker.toggle.coords", PlayerTrackerClient.config.showCoords);
 	}
 
@@ -106,7 +105,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 		return Math.max(0, Math.min(x, this.width - compassW()));
 	}
 
-	// Dimensions des boîtes d'aperçu.
+	// Preview box dimensions.
 	private int compassBoxW() {
 		return compassW();
 	}
@@ -132,55 +131,55 @@ public class HudEditScreen extends BaseTrackerScreen {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-		dimBackground(context, 0xC0000000);
+	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		dimBackground(g, 0xC0000000);
 		TrackerConfig cfg = PlayerTrackerClient.config;
 
-		// Boussole (aperçu, à l'échelle)
+		// Compass (preview, to scale)
 		int cx = compassX();
 		int cy = cfg.compassY;
 		int cw = compassBoxW();
 		int ch = compassBoxH();
-		context.fill(cx, cy, cx + cw, cy + ch, 0x99000000);
-		outline(context, cx, cy, cw, ch, hover(mouseX, mouseY, cx, cy, cw, ch) ? 0xFFFFEE55 : 0xFFFFFFFF);
-		context.fill(cx + cw / 2, cy - 2, cx + cw / 2 + 1, cy + ch + 2, 0xFFFFFFFF);
-		context.drawTextWithShadow(this.textRenderer, Text.translatable(
+		g.fill(cx, cy, cx + cw, cy + ch, 0x99000000);
+		outline(g, cx, cy, cw, ch, hover(mouseX, mouseY, cx, cy, cw, ch) ? 0xFFFFEE55 : 0xFFFFFFFF);
+		g.fill(cx + cw / 2, cy - 2, cx + cw / 2 + 1, cy + ch + 2, 0xFFFFFFFF);
+		g.text(this.font, Component.translatable(
 				cfg.showCompass ? "playertracker.editor.compass" : "playertracker.editor.compass_hidden"),
-				cx + 4, cy + 2, 0xFFFFFF55);
+				cx + 4, cy + 2, 0xFFFFFF55, true);
 
-		// Liste (aperçu, à l'échelle)
+		// List (preview, to scale)
 		int lx = cfg.listX;
 		int ly = cfg.listY;
 		int lw = listBoxW();
 		int lh = listBoxH();
-		context.fill(lx, ly, lx + lw, ly + lh, 0x99000000);
-		outline(context, lx, ly, lw, lh, hover(mouseX, mouseY, lx, ly, lw, lh) ? 0xFFFFEE55 : 0xFFFFFFFF);
-		context.drawTextWithShadow(this.textRenderer, Text.translatable(
+		g.fill(lx, ly, lx + lw, ly + lh, 0x99000000);
+		outline(g, lx, ly, lw, lh, hover(mouseX, mouseY, lx, ly, lw, lh) ? 0xFFFFEE55 : 0xFFFFFFFF);
+		g.text(this.font, Component.translatable(
 				cfg.showList ? "playertracker.hud.list_header" : "playertracker.editor.list_hidden"),
-				lx + 4, ly + 4, 0xFFFFFF55);
+				lx + 4, ly + 4, 0xFFFFFF55, true);
 
-		// Indicateur de connexion (aperçu, à l'échelle)
+		// Connection indicator (preview, to scale)
 		int stx = cfg.statusX;
 		int sty = cfg.statusY;
 		int stw = statusBoxW();
 		int sth = statusBoxH();
-		context.fill(stx, sty, stx + stw, sty + sth, 0x99000000);
-		outline(context, stx, sty, stw, sth, hover(mouseX, mouseY, stx, sty, stw, sth) ? 0xFFFFEE55 : 0xFFFFFFFF);
-		context.fill(stx + 2, sty + 2, stx + 8, sty + 8, 0xFF3FD44B);
-		context.drawTextWithShadow(this.textRenderer, Text.translatable(
+		g.fill(stx, sty, stx + stw, sty + sth, 0x99000000);
+		outline(g, stx, sty, stw, sth, hover(mouseX, mouseY, stx, sty, stw, sth) ? 0xFFFFEE55 : 0xFFFFFFFF);
+		g.fill(stx + 2, sty + 2, stx + 8, sty + 8, 0xFF3FD44B);
+		g.text(this.font, Component.translatable(
 				cfg.showStatus ? "playertracker.editor.status" : "playertracker.editor.status_hidden"),
-				stx + 11, sty + 1, 0xFFCFCFCF);
+				stx + 11, sty + 1, 0xFFCFCFCF, true);
 
-		// Aide
-		context.drawCenteredTextWithShadow(this.textRenderer,
-				Text.translatable("playertracker.editor.help"),
+		// Help
+		g.centeredText(this.font,
+				Component.translatable("playertracker.editor.help"),
 				this.width / 2, this.height - 16, 0xFFFFFFFF);
 
-		super.render(context, mouseX, mouseY, delta);
+		super.extractRenderState(g, mouseX, mouseY, delta);
 	}
 
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double mx = click.x();
 		double my = click.y();
 		TrackerConfig cfg = PlayerTrackerClient.config;
@@ -208,7 +207,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 	}
 
 	@Override
-	public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+	public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
 		TrackerConfig cfg = PlayerTrackerClient.config;
 		double mx = click.x();
 		double my = click.y();
@@ -231,15 +230,15 @@ public class HudEditScreen extends BaseTrackerScreen {
 	}
 
 	@Override
-	public boolean mouseReleased(Click click) {
+	public boolean mouseReleased(MouseButtonEvent click) {
 		dragging = NONE;
 		return super.mouseReleased(click);
 	}
 
 	@Override
-	public void close() {
+	public void onClose() {
 		PlayerTrackerClient.config.save();
-		super.close();
+		super.onClose();
 	}
 
 	private int clampX(int x, int w) {
@@ -254,11 +253,11 @@ public class HudEditScreen extends BaseTrackerScreen {
 		return mx >= x && mx <= x + w && my >= y && my <= y + h;
 	}
 
-	/** Contour d'un rectangle (drawBorder n'existe pas dans cette version). */
-	private static void outline(DrawContext ctx, int x, int y, int w, int h, int color) {
-		ctx.fill(x, y, x + w, y + 1, color);
-		ctx.fill(x, y + h - 1, x + w, y + h, color);
-		ctx.fill(x, y, x + 1, y + h, color);
-		ctx.fill(x + w - 1, y, x + w, y + h, color);
+	/** Rectangle outline (drawBorder does not exist in this version). */
+	private static void outline(GuiGraphicsExtractor g, int x, int y, int w, int h, int color) {
+		g.fill(x, y, x + w, y + 1, color);
+		g.fill(x, y + h - 1, x + w, y + h, color);
+		g.fill(x, y, x + 1, y + h, color);
+		g.fill(x + w - 1, y, x + w, y + h, color);
 	}
 }

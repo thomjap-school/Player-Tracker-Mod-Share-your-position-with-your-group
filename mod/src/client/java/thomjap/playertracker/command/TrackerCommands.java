@@ -10,16 +10,16 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.argument.ColorArgumentType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.commands.arguments.ColorArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 /**
- * Commandes client :
- *   /tracker add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [couleur] &lt;name&gt;
+ * Client commands:
+ *   /tracker add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [color] &lt;name&gt;
  *   /tracker remove waypoint &lt;name&gt;
  *   /tracker list
  */
@@ -36,10 +36,10 @@ public final class TrackerCommands {
 								.then(branch("calcwaypoint", TrackerCommands::addCalcWaypoint)))
 						.then(literal("change").then(literal("waypoint").then(literal("color")
 								.then(argument("name", StringArgumentType.string())
-										.then(argument("color", ColorArgumentType.color())
+										.then(argument("color", ColorArgument.color())
 												.executes(ctx -> changeColor(ctx.getSource(),
 														StringArgumentType.getString(ctx, "name"),
-														rgb(ctx.getArgument("color", Formatting.class)))))))))
+														rgb(ctx.getArgument("color", ChatFormatting.class)))))))))
 						.then(literal("share").then(literal("waypoint")
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> shareWaypoint(ctx.getSource(),
@@ -58,24 +58,24 @@ public final class TrackerCommands {
 								.executes(ctx -> listWaypoints(ctx.getSource())))));
 	}
 
-	/** Action d'ajout de waypoint (x y z couleur nom) → code retour brigadier. */
+	/** Waypoint add action (x y z color name) → brigadier return code. */
 	@FunctionalInterface
 	private interface WpAction {
 		int run(FabricClientCommandSource src, int x, int y, int z, int color, String name);
 	}
 
-	/** Sous-arbre commun aux commandes add : x y z [couleur] nom, avec action au choix. */
+	/** Shared sub-tree for the add commands: x y z [color] name, with a chosen action. */
 	private static LiteralArgumentBuilder<FabricClientCommandSource> branch(String sub, WpAction action) {
 		return literal(sub).then(argument("x", IntegerArgumentType.integer())
 				.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
-								.then(argument("color", ColorArgumentType.color())
+								.then(argument("color", ColorArgument.color())
 										.then(argument("name", StringArgumentType.greedyString())
 												.executes(ctx -> action.run(ctx.getSource(),
 														IntegerArgumentType.getInteger(ctx, "x"),
 														IntegerArgumentType.getInteger(ctx, "y"),
 														IntegerArgumentType.getInteger(ctx, "z"),
-														rgb(ctx.getArgument("color", Formatting.class)),
+														rgb(ctx.getArgument("color", ChatFormatting.class)),
 														StringArgumentType.getString(ctx, "name")))))
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> action.run(ctx.getSource(),
@@ -86,13 +86,13 @@ public final class TrackerCommands {
 												StringArgumentType.getString(ctx, "name")))))));
 	}
 
-	/** Convertit une couleur de chat (Formatting) en ARGB opaque. */
-	private static int rgb(Formatting formatting) {
-		Integer c = formatting.getColorValue();
+	/** Converts a chat color (ChatFormatting) to opaque ARGB. */
+	private static int rgb(ChatFormatting formatting) {
+		Integer c = formatting.getColor();
 		return c != null ? (0xFF000000 | c) : Waypoint.DEFAULT_COLOR;
 	}
 
-	/** Ajoute (ou remplace) un waypoint dans une dimension donnée. */
+	/** Adds (or replaces) a waypoint in a given dimension. */
 	private static void addOne(TrackerConfig cfg, String name, int x, int y, int z, String dim, int color, boolean shared) {
 		cfg.waypoints.removeIf(w -> w.name.equalsIgnoreCase(name) && w.dim.equals(dim));
 		Waypoint w = new Waypoint(name, x + 0.5, y, z + 0.5, dim, color);
@@ -105,13 +105,13 @@ public final class TrackerCommands {
 		addOne(cfg, name, x, y, z, Dimensions.current(), color, shared);
 		cfg.save();
 		PlayerTrackerClient.syncWaypoints();
-		src.sendFeedback(Text.translatable(shared ? "playertracker.cmd.added_shared" : "playertracker.cmd.added", name, x, y, z));
+		src.sendFeedback(Component.translatable(shared ? "playertracker.cmd.added_shared" : "playertracker.cmd.added", name, x, y, z));
 		return 1;
 	}
 
 	/**
-	 * Waypoint « lié » Overworld ↔ Nether, forcé partagé : crée le point dans la
-	 * dimension courante ET son équivalent dans l'autre monde (÷8 OW→Nether, ×8 Nether→OW).
+	 * "Linked" Overworld ↔ Nether waypoint, forced shared: creates the point in
+	 * the current dimension AND its equivalent in the other world (÷8 OW→Nether, ×8 Nether→OW).
 	 */
 	private static int addCalcWaypoint(FabricClientCommandSource src, int x, int y, int z, int color, String name) {
 		TrackerConfig cfg = PlayerTrackerClient.config;
@@ -125,7 +125,7 @@ public final class TrackerCommands {
 		}
 		cfg.save();
 		PlayerTrackerClient.syncWaypoints();
-		src.sendFeedback(Text.translatable("playertracker.cmd.calc_added", name, x, y, z));
+		src.sendFeedback(Component.translatable("playertracker.cmd.calc_added", name, x, y, z));
 		return 1;
 	}
 
@@ -138,13 +138,13 @@ public final class TrackerCommands {
 			}
 		}
 		if (found == null) {
-			src.sendFeedback(Text.translatable("playertracker.cmd.notfound", name));
+			src.sendFeedback(Component.translatable("playertracker.cmd.notfound", name));
 			return 1;
 		}
 		found.shared = !found.shared;
 		cfg.save();
 		PlayerTrackerClient.syncWaypoints();
-		src.sendFeedback(Text.translatable(
+		src.sendFeedback(Component.translatable(
 				found.shared ? "playertracker.cmd.shared" : "playertracker.cmd.unshared", name));
 		return 1;
 	}
@@ -153,7 +153,7 @@ public final class TrackerCommands {
 		TrackerConfig cfg = PlayerTrackerClient.config;
 		cfg.crateWaypoints = on;
 		cfg.save();
-		src.sendFeedback(Text.translatable(on ? "playertracker.cmd.caisses_on" : "playertracker.cmd.caisses_off"));
+		src.sendFeedback(Component.translatable(on ? "playertracker.cmd.caisses_on" : "playertracker.cmd.caisses_off"));
 		return 1;
 	}
 
@@ -161,7 +161,7 @@ public final class TrackerCommands {
 		TrackerConfig cfg = PlayerTrackerClient.config;
 		cfg.showBeams = on;
 		cfg.save();
-		src.sendFeedback(Text.translatable(on ? "playertracker.cmd.beams_on" : "playertracker.cmd.beams_off"));
+		src.sendFeedback(Component.translatable(on ? "playertracker.cmd.beams_on" : "playertracker.cmd.beams_off"));
 		return 1;
 	}
 
@@ -176,7 +176,7 @@ public final class TrackerCommands {
 		}
 		cfg.save();
 		PlayerTrackerClient.syncWaypoints();
-		src.sendFeedback(Text.translatable(
+		src.sendFeedback(Component.translatable(
 				found ? "playertracker.cmd.color_changed" : "playertracker.cmd.notfound", name));
 		return 1;
 	}
@@ -186,7 +186,7 @@ public final class TrackerCommands {
 		boolean removed = cfg.waypoints.removeIf(w -> w.name.equalsIgnoreCase(name));
 		cfg.save();
 		PlayerTrackerClient.syncWaypoints();
-		src.sendFeedback(Text.translatable(
+		src.sendFeedback(Component.translatable(
 				removed ? "playertracker.cmd.removed" : "playertracker.cmd.notfound", name));
 		return 1;
 	}
@@ -194,12 +194,12 @@ public final class TrackerCommands {
 	private static int listWaypoints(FabricClientCommandSource src) {
 		TrackerConfig cfg = PlayerTrackerClient.config;
 		if (cfg.waypoints.isEmpty()) {
-			src.sendFeedback(Text.translatable("playertracker.cmd.empty"));
+			src.sendFeedback(Component.translatable("playertracker.cmd.empty"));
 			return 1;
 		}
-		src.sendFeedback(Text.translatable("playertracker.cmd.list_header", cfg.waypoints.size()));
+		src.sendFeedback(Component.translatable("playertracker.cmd.list_header", cfg.waypoints.size()));
 		for (Waypoint w : cfg.waypoints) {
-			src.sendFeedback(Text.literal(
+			src.sendFeedback(Component.literal(
 					String.format(" - %s  (%d %d %d)", w.name, (int) w.x, (int) w.y, (int) w.z)));
 		}
 		return 1;

@@ -13,9 +13,9 @@ import thomjap.playertracker.util.Dimensions;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +23,10 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Point d'entrée client du mod Player Tracker.
+ * Client entry point of the Player Tracker mod.
  *
- * <p>Envoie périodiquement la position du joueur local au serveur relais et
- * enregistre l'élément de HUD qui affiche la direction des autres joueurs.
+ * <p>Periodically sends the local player position to the relay server and
+ * registers the HUD element that shows the direction of other players.
  */
 public class PlayerTrackerClient implements ClientModInitializer {
 	public static final String MOD_ID = "playertracker";
@@ -38,19 +38,19 @@ public class PlayerTrackerClient implements ClientModInitializer {
 	private int tickCounter = 0;
 	private boolean wasDead = false;
 
-	/** Pseudo utilisé pour identifier ce joueur auprès du relais. */
+	/** Name used to identify this player to the relay. */
 	public static String selfName() {
 		if (config != null && config.playerName != null && !config.playerName.isBlank()) {
 			return config.playerName;
 		}
-		MinecraftClient mc = MinecraftClient.getInstance();
-		if (mc.getSession() != null) {
-			return mc.getSession().getUsername();
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.getUser() != null) {
+			return mc.getUser().getName();
 		}
 		return "Player";
 	}
 
-	/** À appeler après toute modification des waypoints pour les repartager (carte web). */
+	/** Call after any waypoint change to re-share them (web map). */
 	public static void syncWaypoints() {
 		if (relay != null) {
 			relay.sendWaypoints();
@@ -72,25 +72,25 @@ public class PlayerTrackerClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
 
 		HudElementRegistry.addLast(
-				Identifier.of(MOD_ID, "tracker"),
+				Identifier.fromNamespaceAndPath(MOD_ID, "tracker"),
 				new TrackerHud());
 
-		LOGGER.info("Player Tracker initialisé. Relais : {}", config.serverUrl);
+		LOGGER.info("Player Tracker initialized. Relay: {}", config.serverUrl);
 	}
 
-	private void onClientTick(MinecraftClient mc) {
+	private void onClientTick(Minecraft mc) {
 		TrackerKeybinds.handle(mc);
 
-		// Marqueur de mort : au moment où le joueur meurt, on pose un waypoint.
-		if (mc.player != null && mc.world != null) {
-			boolean dead = mc.player.isDead();
+		// Death marker: the moment the player dies, drop a waypoint.
+		if (mc.player != null && mc.level != null) {
+			boolean dead = mc.player.isDeadOrDying();
 			if (dead && !wasDead) {
 				createDeathWaypoint(mc);
 			}
 			wasDead = dead;
 		}
 
-		if (!config.enabled || mc.player == null || mc.world == null) {
+		if (!config.enabled || mc.player == null || mc.level == null) {
 			return;
 		}
 
@@ -100,8 +100,8 @@ public class PlayerTrackerClient implements ClientModInitializer {
 		}
 		tickCounter = 0;
 
-		// Mode furtif : on reste connecté (donc on voit les autres) mais on
-		// n'envoie pas sa position, donc les autres ne nous voient plus.
+		// Stealth mode: we stay connected (so we still see others) but do not
+		// send our position, so others no longer see us.
 		if (!config.sharePosition) {
 			return;
 		}
@@ -114,13 +114,13 @@ public class PlayerTrackerClient implements ClientModInitializer {
 				Dimensions.current());
 	}
 
-	private void createDeathWaypoint(MinecraftClient mc) {
+	private void createDeathWaypoint(Minecraft mc) {
 		String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-		String name = selfName() + " mort à " + time;
+		String name = selfName() + " died at " + time;
 		config.waypoints.add(new Waypoint(
 				name, mc.player.getX(), mc.player.getY(), mc.player.getZ(), Dimensions.current(), 0xFFFF5555));
 		config.save();
 		syncWaypoints();
-		mc.player.sendMessage(Text.translatable("playertracker.death.saved"), false);
+		mc.player.sendSystemMessage(Component.translatable("playertracker.death.saved"));
 	}
 }
