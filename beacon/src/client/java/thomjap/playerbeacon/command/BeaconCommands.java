@@ -5,9 +5,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.commands.arguments.ColorArgument;
+import net.minecraft.commands.arguments.HexColorArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
 import thomjap.playerbeacon.PlayerBeaconClient;
 import thomjap.playerbeacon.config.BeaconConfig;
 import thomjap.playerbeacon.model.Waypoint;
@@ -50,13 +49,13 @@ public final class BeaconCommands {
 		return literal(sub).then(argument("x", IntegerArgumentType.integer())
 				.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
-								.then(argument("color", ColorArgument.color())
+								.then(argument("color", HexColorArgument.hexColor())
 										.then(argument("name", StringArgumentType.greedyString())
 												.executes(ctx -> action.run(ctx.getSource(),
 														IntegerArgumentType.getInteger(ctx, "x"),
 														IntegerArgumentType.getInteger(ctx, "y"),
 														IntegerArgumentType.getInteger(ctx, "z"),
-														rgb(ctx.getArgument("color", ChatFormatting.class)),
+														(0xFF000000 | ctx.getArgument("color", Integer.class)),
 														StringArgumentType.getString(ctx, "name")))))
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> action.run(ctx.getSource(),
@@ -65,11 +64,6 @@ public final class BeaconCommands {
 												IntegerArgumentType.getInteger(ctx, "z"),
 												Waypoint.DEFAULT_COLOR,
 												StringArgumentType.getString(ctx, "name")))))));
-	}
-
-	private static int rgb(ChatFormatting f) {
-		Integer c = f.getColor();
-		return c != null ? (0xFF000000 | c) : Waypoint.DEFAULT_COLOR;
 	}
 
 	private static void addOne(BeaconConfig cfg, String name, int x, int y, int z, String dim, int color) {

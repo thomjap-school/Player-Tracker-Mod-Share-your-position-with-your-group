@@ -43,7 +43,7 @@ public class TrackerHud implements HudElement {
 		if (cfg == null || relay == null || !cfg.enabled || !cfg.hudEnabled) {
 			return;
 		}
-		if (mc.player == null || mc.level == null || mc.options.hideGui) {
+		if (mc.player == null || mc.level == null) {
 			return;
 		}
 

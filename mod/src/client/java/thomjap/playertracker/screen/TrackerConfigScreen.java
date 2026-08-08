@@ -62,7 +62,7 @@ public class TrackerConfigScreen extends BaseTrackerScreen {
 
 		y += 24;
 		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.config.move_hud"),
-						b -> this.minecraft.setScreen(new HudEditScreen()))
+						b -> this.minecraft.setScreenAndShow(new HudEditScreen()))
 				.bounds(fx, y, fw / 2 - 2, 20).build());
 		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.config.close"), b -> this.onClose())
 				.bounds(fx + fw / 2 + 2, y, fw / 2 - 2, 20).build());

@@ -10,9 +10,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.commands.arguments.ColorArgument;
+import net.minecraft.commands.arguments.HexColorArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
@@ -36,10 +35,10 @@ public final class TrackerCommands {
 								.then(branch("calcwaypoint", TrackerCommands::addCalcWaypoint)))
 						.then(literal("change").then(literal("waypoint").then(literal("color")
 								.then(argument("name", StringArgumentType.string())
-										.then(argument("color", ColorArgument.color())
+										.then(argument("color", HexColorArgument.hexColor())
 												.executes(ctx -> changeColor(ctx.getSource(),
 														StringArgumentType.getString(ctx, "name"),
-														rgb(ctx.getArgument("color", ChatFormatting.class)))))))))
+														(0xFF000000 | ctx.getArgument("color", Integer.class)))))))))
 						.then(literal("share").then(literal("waypoint")
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> shareWaypoint(ctx.getSource(),
@@ -69,13 +68,13 @@ public final class TrackerCommands {
 		return literal(sub).then(argument("x", IntegerArgumentType.integer())
 				.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
-								.then(argument("color", ColorArgument.color())
+								.then(argument("color", HexColorArgument.hexColor())
 										.then(argument("name", StringArgumentType.greedyString())
 												.executes(ctx -> action.run(ctx.getSource(),
 														IntegerArgumentType.getInteger(ctx, "x"),
 														IntegerArgumentType.getInteger(ctx, "y"),
 														IntegerArgumentType.getInteger(ctx, "z"),
-														rgb(ctx.getArgument("color", ChatFormatting.class)),
+														(0xFF000000 | ctx.getArgument("color", Integer.class)),
 														StringArgumentType.getString(ctx, "name")))))
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> action.run(ctx.getSource(),
@@ -84,12 +83,6 @@ public final class TrackerCommands {
 												IntegerArgumentType.getInteger(ctx, "z"),
 												Waypoint.DEFAULT_COLOR,
 												StringArgumentType.getString(ctx, "name")))))));
-	}
-
-	/** Converts a chat color (ChatFormatting) to opaque ARGB. */
-	private static int rgb(ChatFormatting formatting) {
-		Integer c = formatting.getColor();
-		return c != null ? (0xFF000000 | c) : Waypoint.DEFAULT_COLOR;
 	}
 
 	/** Adds (or replaces) a waypoint in a given dimension. */

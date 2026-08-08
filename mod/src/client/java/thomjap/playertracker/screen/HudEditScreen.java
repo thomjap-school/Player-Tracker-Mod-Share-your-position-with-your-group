@@ -68,10 +68,10 @@ public class HudEditScreen extends BaseTrackerScreen {
 		}).bounds(rightX, row2, 150, 20).build());
 
 		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.editor.server_button"),
-						b -> this.minecraft.setScreen(new TrackerConfigScreen()))
+						b -> this.minecraft.setScreenAndShow(new TrackerConfigScreen()))
 				.bounds(this.width / 2 - 152, this.height - 52, 150, 20).build());
 		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.waypoints.title"),
-						b -> this.minecraft.setScreen(new WaypointsScreen()))
+						b -> this.minecraft.setScreenAndShow(new WaypointsScreen()))
 				.bounds(this.width / 2 + 2, this.height - 52, 150, 20).build());
 	}
 

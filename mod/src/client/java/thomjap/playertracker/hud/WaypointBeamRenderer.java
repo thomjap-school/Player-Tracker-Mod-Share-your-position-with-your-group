@@ -31,7 +31,7 @@ public final class WaypointBeamRenderer {
 			TrackerConfig cfg = PlayerTrackerClient.config;
 			// Follows the HUD: hidden if beams off, HUD disabled (H) or hidden (F1).
 			if (cfg == null || !cfg.showBeams || !cfg.hudEnabled
-					|| mc.level == null || mc.gameRenderer == null || mc.options.hideGui) {
+					|| mc.level == null || mc.gameRenderer == null) {
 				return;
 			}
 			PoseStack matrices = ctx.poseStack();
@@ -39,7 +39,7 @@ public final class WaypointBeamRenderer {
 			if (matrices == null || queue == null) {
 				return;
 			}
-			Vec3 camPos = mc.gameRenderer.getMainCamera().position();
+			Vec3 camPos = mc.gameRenderer.mainCamera().position();
 			for (Waypoint w : Waypoints.visible(Dimensions.current())) {
 				beam(matrices, queue, camPos, w);
 			}

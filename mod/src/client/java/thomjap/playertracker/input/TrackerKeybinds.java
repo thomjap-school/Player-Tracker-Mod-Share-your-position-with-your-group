@@ -56,7 +56,7 @@ public class TrackerKeybinds {
 		TrackerConfig cfg = PlayerTrackerClient.config;
 
 		while (openEditor.consumeClick()) {
-			mc.setScreen(new HudEditScreen());
+			mc.setScreenAndShow(new HudEditScreen());
 		}
 		while (toggleSharing.consumeClick()) {
 			cfg.sharePosition = !cfg.sharePosition;

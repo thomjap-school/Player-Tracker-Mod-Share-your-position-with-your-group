@@ -38,7 +38,7 @@ public final class BeaconKeybind {
 
 	public static void handle(Minecraft mc) {
 		while (openConfig.consumeClick()) {
-			mc.setScreen(new BeaconConfigScreen());
+			mc.setScreenAndShow(new BeaconConfigScreen());
 		}
 		while (toggle.consumeClick()) {
 			BeaconConfig cfg = PlayerBeaconClient.config;
