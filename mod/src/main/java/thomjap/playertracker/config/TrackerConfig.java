@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Configuration du mod, sauvegardée dans
+ * Mod configuration, saved to
  * {@code .minecraft/config/playertracker.json}.
  */
 public class TrackerConfig {
@@ -22,50 +22,50 @@ public class TrackerConfig {
 	private static final Path PATH =
 			FabricLoader.getInstance().getConfigDir().resolve("playertracker.json");
 
-	/** URL du serveur relais. Utilise wss:// en production (TLS). */
+	/** Relay server URL. Use wss:// in production (TLS). */
 	public String serverUrl = "ws://localhost:8000/ws";
-	/** Code de "salon" : seuls les joueurs avec le même code se voient. */
+	/** Room code: only players with the same code see each other. */
 	public String room = "mon-salon";
-	/** Pseudo affiché. Vide = pseudo Minecraft. */
+	/** Displayed username. Empty = Minecraft username. */
 	public String playerName = "";
 
-	/** Mod activé (connexion + HUD + partage). Coupe tout. */
+	/** Mod enabled (connection + HUD + sharing). Turns everything off. */
 	public boolean enabled = true;
-	/** Mode furtif : si false, tu vois les autres mais tu ne partages pas ta position. */
+	/** Stealth mode: if false, you see others but do not share your position. */
 	public boolean sharePosition = true;
-	/** Affichage du HUD activé. */
+	/** HUD display enabled. */
 	public boolean hudEnabled = true;
-	/** Afficher la boussole en haut de l'écran. */
+	/** Show the compass at the top of the screen. */
 	public boolean showCompass = true;
-	/** Afficher la liste des joueurs à gauche. */
+	/** Show the players list on the left. */
 	public boolean showList = true;
-	/** Afficher le petit indicateur de connexion au serveur (haut-gauche). */
+	/** Show the small server connection indicator (top-left). */
 	public boolean showStatus = true;
-	/** Afficher les coordonnées exactes (X Y Z) à côté du pseudo dans la liste. */
+	/** Show exact coordinates (X Y Z) next to the username in the list. */
 	public boolean showCoords = false;
 
-	/** Position du HUD (déplaçable via l'éditeur, touche M). -1 = auto. */
-	public int compassX = -1;   // -1 = boussole centrée horizontalement
+	/** HUD position (movable via the editor, M key). -1 = auto. */
+	public int compassX = -1;   // -1 = compass centered horizontally
 	public int compassY = 6;
 	public int listX = 4;
 	public int listY = 24;
 
-	/** Position de l'indicateur de connexion (déplaçable via l'éditeur M). */
+	/** Position of the connection indicator (movable via the M editor). */
 	public int statusX = 4;
 	public int statusY = 4;
 
-	/** Waypoints personnels (créés via /tracker ou à la mort). */
+	/** Personal waypoints (created via /tracker or on death). */
 	public List<Waypoint> waypoints = new ArrayList<>();
-	/** Clés (Waypoint.sharedKey) des waypoints PARTAGÉS des autres masqués de ma vue. */
+	/** Keys (Waypoint.sharedKey) of others' SHARED waypoints hidden from my view. */
 	public List<String> hiddenShared = new ArrayList<>();
-	/** Créer automatiquement un waypoint pour les caisses d'event non communes. */
+	/** Automatically create a waypoint for non-common event crates. */
 	public boolean crateWaypoints = true;
-	/** Afficher un faisceau 3D (type beacon) à chaque waypoint (expérimental). */
+	/** Show a 3D beam (beacon-style) at each waypoint (experimental). */
 	public boolean showBeams = true;
 
-	/** Intervalle d'envoi de la position (en ticks ; 5 = ~4x/seconde). */
+	/** Position send interval (in ticks; 5 = ~4x/second). */
 	public int sendIntervalTicks = 5;
-	/** On masque un joueur qui n'a pas bougé depuis ce délai (ms). */
+	/** Hide a player who hasn't moved for this delay (ms). */
 	public long staleTimeoutMs = 15000;
 
 	public static TrackerConfig load() {
@@ -73,12 +73,12 @@ public class TrackerConfig {
 			if (Files.exists(PATH)) {
 				TrackerConfig cfg = GSON.fromJson(Files.readString(PATH), TrackerConfig.class);
 				if (cfg != null) {
-					cfg.save(); // réécrit avec les éventuels nouveaux champs par défaut
+					cfg.save(); // rewrite with any new default fields
 					return cfg;
 				}
 			}
 		} catch (Exception e) {
-			PlayerTrackerClient.LOGGER.error("Échec du chargement de la config", e);
+			PlayerTrackerClient.LOGGER.error("Failed to load the config", e);
 		}
 		TrackerConfig cfg = new TrackerConfig();
 		cfg.save();
@@ -90,7 +90,7 @@ public class TrackerConfig {
 			Files.createDirectories(PATH.getParent());
 			Files.writeString(PATH, GSON.toJson(this));
 		} catch (IOException e) {
-			PlayerTrackerClient.LOGGER.error("Échec de la sauvegarde de la config", e);
+			PlayerTrackerClient.LOGGER.error("Failed to save the config", e);
 		}
 	}
 }

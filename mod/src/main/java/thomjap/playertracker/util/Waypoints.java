@@ -7,14 +7,14 @@ import thomjap.playertracker.model.Waypoint;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Sélection des waypoints à afficher (HUD + faisceaux). */
+/** Selection of waypoints to display (HUD + beams). */
 public final class Waypoints {
 	private Waypoints() {
 	}
 
 	/**
-	 * Waypoints à afficher dans une dimension : les miens (non masqués) plus ceux
-	 * partagés par les autres (non masqués de ma vue).
+	 * Waypoints to display in a dimension: mine (not hidden) plus those
+	 * shared by others (not hidden from my view).
 	 */
 	public static List<Waypoint> visible(String dim) {
 		TrackerConfig cfg = PlayerTrackerClient.config;

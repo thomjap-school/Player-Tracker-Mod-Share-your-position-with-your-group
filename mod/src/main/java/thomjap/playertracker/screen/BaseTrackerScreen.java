@@ -5,8 +5,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 /**
- * Base commune aux écrans du mod : ne met pas le jeu en pause et fournit un
- * assombrissement de fond.
+ * Common base for the mod's screens: does not pause the game and provides a
+ * background dim.
  */
 abstract class BaseTrackerScreen extends Screen {
 
@@ -15,8 +15,8 @@ abstract class BaseTrackerScreen extends Screen {
 	}
 
 	/**
-	 * Assombrit l'écran. On n'utilise pas {@code renderBackground()} : son flou
-	 * plante sur un écran non-pausant ("Can only blur once per frame").
+	 * Dims the screen. We do not use {@code renderBackground()}: its blur
+	 * crashes on a non-pausing screen ("Can only blur once per frame").
 	 */
 	protected void dimBackground(DrawContext ctx, int argb) {
 		ctx.fill(0, 0, this.width, this.height, argb);

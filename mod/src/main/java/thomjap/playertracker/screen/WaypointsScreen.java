@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Écran de gestion des waypoints : onglets (tous / privés / partagés / caisses),
- * ajout, partage, coloration, masquage et suppression. L'onglet « Partagés »
- * inclut aussi les waypoints des autres joueurs (avec option masquer).
+ * Waypoint management screen: tabs (all / private / shared / crates),
+ * add, share, color, hide and delete. The "Shared" tab
+ * also includes other players' waypoints (with a hide option).
  */
 public class WaypointsScreen extends BaseTrackerScreen {
 	private static final int PER_PAGE = 6;
@@ -64,7 +64,7 @@ public class WaypointsScreen extends BaseTrackerScreen {
 		}
 	}
 
-	/** Entrées de l'onglet courant : mes waypoints + (onglet Partagés) ceux des autres. */
+	/** Entries of the current tab: my waypoints + (Shared tab) other players'. */
 	private List<Waypoint> entries() {
 		List<Waypoint> out = new ArrayList<>();
 		for (Waypoint w : PlayerTrackerClient.config.waypoints) {
@@ -125,7 +125,7 @@ public class WaypointsScreen extends BaseTrackerScreen {
 			final Waypoint w = list.get(start + i);
 			int ry = TOP + i * ROW_H;
 			if (w.owner == null) {
-				// Mes waypoints : Partager, Masquer, Couleur, Supprimer.
+				// My waypoints: Share, Hide, Color, Delete.
 				this.addDrawableChild(ButtonWidget.builder(shareLabel(w), b -> {
 					w.shared = !w.shared;
 					cfg.save();
@@ -146,7 +146,7 @@ public class WaypointsScreen extends BaseTrackerScreen {
 					this.clearAndInit();
 				}).dimensions(lx + lw - 52, ry, 52, 18).build());
 			} else {
-				// Waypoint d'un autre joueur : uniquement Masquer/Afficher.
+				// Another player's waypoint: only Hide/Show.
 				this.addDrawableChild(ButtonWidget.builder(hideLabel(w), b -> toggleHidden(w))
 						.dimensions(lx + lw - 60, ry, 60, 18).build());
 			}
@@ -159,7 +159,7 @@ public class WaypointsScreen extends BaseTrackerScreen {
 		this.addDrawableChild(ButtonWidget.builder(Text.translatable("playertracker.waypoints.add_here"), b -> addHere())
 				.dimensions(lx + lw - 226, ay, 108, 20).build());
 		this.addDrawableChild(ButtonWidget.builder(Text.translatable("playertracker.waypoints.delete_all"), b -> {
-			cfg.waypoints.removeAll(entries()); // ne retire que les miens (les autres ne sont pas dans la config)
+			cfg.waypoints.removeAll(entries()); // only removes mine (others are not in the config)
 			cfg.save();
 			PlayerTrackerClient.syncWaypoints();
 			this.clearAndInit();

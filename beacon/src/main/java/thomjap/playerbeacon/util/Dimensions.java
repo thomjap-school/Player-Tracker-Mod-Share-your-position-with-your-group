@@ -2,7 +2,7 @@ package thomjap.playerbeacon.util;
 
 import net.minecraft.client.MinecraftClient;
 
-/** Identifiants de dimensions + dimension courante. */
+/** Dimension identifiers + current dimension. */
 public final class Dimensions {
 	public static final String OVERWORLD = "minecraft:overworld";
 	public static final String NETHER = "minecraft:the_nether";

@@ -18,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Client WebSocket ÉMETTEUR SEUL : envoie sa position au relais et ignore
- * tout ce qui arrive (aucun affichage des autres). Se reconnecte automatiquement.
+ * EMITTER-ONLY WebSocket client: sends its position to the relay and ignores
+ * everything incoming (no display of others). Reconnects automatically.
  */
 public class BeaconRelay {
 	private static final Gson GSON = new Gson();
@@ -77,11 +77,11 @@ public class BeaconRelay {
 					.whenComplete((ws, err) -> {
 						connecting.set(false);
 						if (err != null) {
-							PlayerBeaconClient.LOGGER.warn("Connexion au relais échouée : {}", err.toString());
+							PlayerBeaconClient.LOGGER.warn("Failed to connect to the relay: {}", err.toString());
 							scheduleReconnect();
 						} else {
 							this.webSocket = ws;
-							PlayerBeaconClient.LOGGER.info("Beacon connecté au relais {}", config.serverUrl);
+							PlayerBeaconClient.LOGGER.info("Beacon connected to the relay {}", config.serverUrl);
 						}
 					});
 		} catch (Exception e) {
@@ -96,7 +96,7 @@ public class BeaconRelay {
 		}
 	}
 
-	/** Message des waypoints diffusés (tous partagés). */
+	/** Broadcast waypoints message (all shared). */
 	private JsonObject waypointsMessage() {
 		JsonObject msg = new JsonObject();
 		msg.addProperty("type", "waypoints");
@@ -117,7 +117,7 @@ public class BeaconRelay {
 		return msg;
 	}
 
-	/** Envoie (ou met à jour) la liste des waypoints au relais. */
+	/** Sends (or updates) the waypoint list to the relay. */
 	public void sendWaypoints() {
 		WebSocket ws = this.webSocket;
 		if (ws == null || !isConnected()) {
@@ -126,11 +126,11 @@ public class BeaconRelay {
 		try {
 			ws.sendText(GSON.toJson(waypointsMessage()), true);
 		} catch (Exception e) {
-			PlayerBeaconClient.LOGGER.debug("Envoi des waypoints échoué", e);
+			PlayerBeaconClient.LOGGER.debug("Failed to send waypoints", e);
 		}
 	}
 
-	/** Envoie la position du joueur local (rien n'est reçu en retour). */
+	/** Sends the local player position (nothing is received back). */
 	public void sendPosition(String name, double x, double y, double z, String dim) {
 		WebSocket ws = this.webSocket;
 		if (ws == null || !isConnected()) {
@@ -147,11 +147,11 @@ public class BeaconRelay {
 		try {
 			ws.sendText(GSON.toJson(msg), true);
 		} catch (Exception e) {
-			PlayerBeaconClient.LOGGER.debug("Envoi de position échoué", e);
+			PlayerBeaconClient.LOGGER.debug("Failed to send position", e);
 		}
 	}
 
-	/** Listener : on consomme les trames entrantes mais on les IGNORE totalement. */
+	/** Listener: we consume incoming frames but IGNORE them entirely. */
 	private class Listener implements WebSocket.Listener {
 		@Override
 		public void onOpen(WebSocket ws) {
@@ -164,7 +164,7 @@ public class BeaconRelay {
 
 		@Override
 		public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
-			ws.request(1); // on lit pour ne pas bloquer, mais on ne fait rien du contenu
+			ws.request(1); // we read to avoid blocking, but do nothing with the content
 			return null;
 		}
 
@@ -177,7 +177,7 @@ public class BeaconRelay {
 
 		@Override
 		public void onError(WebSocket ws, Throwable error) {
-			PlayerBeaconClient.LOGGER.warn("Erreur du relais : {}", error.toString());
+			PlayerBeaconClient.LOGGER.warn("Relay error: {}", error.toString());
 			BeaconRelay.this.webSocket = null;
 			scheduleReconnect();
 		}

@@ -9,9 +9,9 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * Écran d'édition du HUD (touche M) : glisser pour déplacer la boussole, la
- * liste et l'indicateur de connexion ; molette pour les redimensionner ;
- * boutons pour les afficher/masquer. Enregistré dans la config.
+ * HUD edit screen (M key): drag to move the compass, the
+ * list and the connection indicator; wheel to resize them;
+ * buttons to show/hide them. Saved in the config.
  */
 public class HudEditScreen extends BaseTrackerScreen {
 	private static final int COMPASS_H = 12;
@@ -106,7 +106,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 		return Math.max(0, Math.min(x, this.width - compassW()));
 	}
 
-	// Dimensions des boîtes d'aperçu.
+	// Preview box dimensions.
 	private int compassBoxW() {
 		return compassW();
 	}
@@ -136,7 +136,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 		dimBackground(context, 0xC0000000);
 		TrackerConfig cfg = PlayerTrackerClient.config;
 
-		// Boussole (aperçu, à l'échelle)
+		// Compass (preview, to scale)
 		int cx = compassX();
 		int cy = cfg.compassY;
 		int cw = compassBoxW();
@@ -148,7 +148,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 				cfg.showCompass ? "playertracker.editor.compass" : "playertracker.editor.compass_hidden"),
 				cx + 4, cy + 2, 0xFFFFFF55);
 
-		// Liste (aperçu, à l'échelle)
+		// List (preview, to scale)
 		int lx = cfg.listX;
 		int ly = cfg.listY;
 		int lw = listBoxW();
@@ -159,7 +159,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 				cfg.showList ? "playertracker.hud.list_header" : "playertracker.editor.list_hidden"),
 				lx + 4, ly + 4, 0xFFFFFF55);
 
-		// Indicateur de connexion (aperçu, à l'échelle)
+		// Connection indicator (preview, to scale)
 		int stx = cfg.statusX;
 		int sty = cfg.statusY;
 		int stw = statusBoxW();
@@ -171,7 +171,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 				cfg.showStatus ? "playertracker.editor.status" : "playertracker.editor.status_hidden"),
 				stx + 11, sty + 1, 0xFFCFCFCF);
 
-		// Aide
+		// Help
 		context.drawCenteredTextWithShadow(this.textRenderer,
 				Text.translatable("playertracker.editor.help"),
 				this.width / 2, this.height - 16, 0xFFFFFFFF);
@@ -254,7 +254,7 @@ public class HudEditScreen extends BaseTrackerScreen {
 		return mx >= x && mx <= x + w && my >= y && my <= y + h;
 	}
 
-	/** Contour d'un rectangle (drawBorder n'existe pas dans cette version). */
+	/** Rectangle outline (drawBorder does not exist in this version). */
 	private static void outline(DrawContext ctx, int x, int y, int w, int h, int color) {
 		ctx.fill(x, y, x + w, y + 1, color);
 		ctx.fill(x, y + h - 1, x + w, y + h, color);
