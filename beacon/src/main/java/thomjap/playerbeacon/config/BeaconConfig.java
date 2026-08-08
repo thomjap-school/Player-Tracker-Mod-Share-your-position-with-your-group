@@ -12,23 +12,23 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Config de l'émetteur, dans {@code config/playerbeacon.json}. */
+/** Emitter config, in {@code config/playerbeacon.json}. */
 public class BeaconConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path PATH =
 			FabricLoader.getInstance().getConfigDir().resolve("playerbeacon.json");
 
-	/** URL du serveur relais (le même que Player Tracker). */
+	/** Relay server URL (the same as Player Tracker). */
 	public String serverUrl = "ws://localhost:8000/ws";
-	/** Salon partagé (doit être le même que le groupe qui te suit). */
+	/** Shared room (must match the group tracking you). */
 	public String room = "mon-salon";
-	/** Pseudo affiché. Vide = pseudo Minecraft. */
+	/** Displayed username. Empty = Minecraft username. */
 	public String playerName = "";
-	/** Diffusion activée. */
+	/** Broadcasting enabled. */
 	public boolean enabled = true;
 	/** Intervalle d'envoi (ticks ; 5 = ~4x/seconde). */
 	public int sendIntervalTicks = 5;
-	/** Waypoints diffusés au salon (créés via /beacon). */
+	/** Waypoints broadcast to the room (created via /beacon). */
 	public List<Waypoint> waypoints = new ArrayList<>();
 
 	public static BeaconConfig load() {
@@ -41,7 +41,7 @@ public class BeaconConfig {
 				}
 			}
 		} catch (Exception e) {
-			PlayerBeaconClient.LOGGER.error("Échec du chargement de la config", e);
+			PlayerBeaconClient.LOGGER.error("Failed to load the config", e);
 		}
 		BeaconConfig cfg = new BeaconConfig();
 		cfg.save();
@@ -53,7 +53,7 @@ public class BeaconConfig {
 			Files.createDirectories(PATH.getParent());
 			Files.writeString(PATH, GSON.toJson(this));
 		} catch (IOException e) {
-			PlayerBeaconClient.LOGGER.error("Échec de la sauvegarde de la config", e);
+			PlayerBeaconClient.LOGGER.error("Failed to save the config", e);
 		}
 	}
 }

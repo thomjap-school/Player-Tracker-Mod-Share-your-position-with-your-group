@@ -16,10 +16,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Surveille le chat : pour chaque annonce de caisse d'event NON commune, crée
- * automatiquement un waypoint (privé) coloré selon la rareté.
+ * Watches the chat: for each NON-common event crate announcement, creates
+ * a (private) waypoint colored by rarity automatically.
  *
- * <p>Exemple de ligne : {@code ▪ ❖ Épique → 281 102 -905}.
+ * <p>Example line: {@code . # Epic -> 281 102 -905}.
  */
 public final class CrateWatcher {
 	private CrateWatcher() {
@@ -28,7 +28,7 @@ public final class CrateWatcher {
 	public static final String TAG = "caisse";
 	private static final Pattern INT = Pattern.compile("-?\\d+");
 
-	/** {mot-clé sans accent, libellé, couleur ARGB}. Ordre = priorité de test. */
+	/** {accent-free keyword, label, ARGB color}. Order = test priority. */
 	private static final Object[][] RARITIES = {
 			{"legendaire", "Légendaire", 0xFFFFAA00},
 			{"mythique", "Mythique", 0xFFFF5555},
@@ -69,7 +69,7 @@ public final class CrateWatcher {
 			}
 		}
 		if (label == null) {
-			return; // commune ou pas une caisse
+			return; // common or not a crate
 		}
 
 		int[] xyz = lastThreeInts(rawText);
@@ -78,7 +78,7 @@ public final class CrateWatcher {
 		}
 		String dim = Dimensions.current();
 
-		// Anti-doublon : même caisse (mêmes coords) déjà présente ?
+		// De-dup: same crate (same coords) already present?
 		for (Waypoint w : cfg.waypoints) {
 			if (TAG.equals(w.tag) && (int) w.x == xyz[0] && (int) w.y == xyz[1] && (int) w.z == xyz[2]) {
 				return;
@@ -94,7 +94,7 @@ public final class CrateWatcher {
 		}
 	}
 
-	/** Les trois derniers entiers de la ligne (= x y z). */
+	/** The last three integers of the line (= x y z). */
 	private static int[] lastThreeInts(String s) {
 		Matcher m = INT.matcher(s);
 		List<Integer> nums = new ArrayList<>();

@@ -1,6 +1,6 @@
 package thomjap.playerbeacon.model;
 
-/** Un waypoint diffusé par l'émetteur (toujours partagé au salon). */
+/** A waypoint broadcast by the emitter (always shared with the room). */
 public class Waypoint {
 	public static final int DEFAULT_COLOR = 0xFFFFDD44;
 
@@ -12,7 +12,7 @@ public class Waypoint {
 	public int color = DEFAULT_COLOR;
 
 	public Waypoint() {
-		// requis par GSON
+		// required by GSON
 	}
 
 	public Waypoint(String name, double x, double y, double z, String dim, int color) {

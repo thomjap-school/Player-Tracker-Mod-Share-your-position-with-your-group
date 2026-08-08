@@ -1,7 +1,7 @@
 package thomjap.playertracker.model;
 
 /**
- * Dernière position connue d'un joueur suivi.
+ * Last known position of a tracked player.
  */
 public class TrackedPlayer {
 	public final String name;

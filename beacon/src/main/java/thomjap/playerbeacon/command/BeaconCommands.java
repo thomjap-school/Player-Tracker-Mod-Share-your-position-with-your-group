@@ -17,10 +17,10 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.arg
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 /**
- * Commandes de l'émetteur (tous les waypoints sont diffusés au salon) :
- *   /beacon add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [couleur] &lt;nom&gt;
- *   /beacon add calcwaypoint …   (lie Overworld ↔ Nether)
- *   /beacon remove waypoint &lt;nom&gt;
+ * Emitter commands (all waypoints are broadcast to the room):
+ *   /beacon add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [color] &lt;name&gt;
+ *   /beacon add calcwaypoint …   (links Overworld ↔ Nether)
+ *   /beacon remove waypoint &lt;name&gt;
  *   /beacon list
  */
 public final class BeaconCommands {

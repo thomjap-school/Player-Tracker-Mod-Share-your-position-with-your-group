@@ -10,8 +10,8 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
 /**
- * Écran de configuration en jeu : régler l'URL du serveur relais, le salon et
- * le pseudo, puis se reconnecter — sans éditer le fichier JSON à la main.
+ * In-game configuration screen: set the relay server URL, the room and
+ * the username, then reconnect - without editing the JSON file by hand.
  */
 public class TrackerConfigScreen extends BaseTrackerScreen {
 	private TextFieldWidget urlField;

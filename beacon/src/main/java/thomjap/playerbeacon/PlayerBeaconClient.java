@@ -11,9 +11,9 @@ import thomjap.playerbeacon.input.BeaconKeybind;
 import thomjap.playerbeacon.net.BeaconRelay;
 
 /**
- * Point d'entrée de Player Beacon : variante ÉMETTEUR SEUL de Player Tracker.
- * Diffuse périodiquement la position du joueur au relais, mais n'affiche ni ne
- * reçoit la position des autres.
+ * Player Beacon entry point: EMITTER-ONLY variant of Player Tracker.
+ * Periodically broadcasts the player position to the relay, but neither shows nor
+ * receives other players' positions.
  */
 public class PlayerBeaconClient implements ClientModInitializer {
 	public static final String MOD_ID = "playerbeacon";
@@ -24,7 +24,7 @@ public class PlayerBeaconClient implements ClientModInitializer {
 
 	private int tickCounter = 0;
 
-	/** À appeler après toute modification des waypoints pour les repartager. */
+	/** Call after any waypoint change to re-share them. */
 	public static void syncWaypoints() {
 		if (relay != null) {
 			relay.sendWaypoints();
@@ -51,7 +51,7 @@ public class PlayerBeaconClient implements ClientModInitializer {
 		BeaconCommands.register();
 		ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
 
-		LOGGER.info("Player Beacon (émetteur seul) initialisé. Relais : {}", config.serverUrl);
+		LOGGER.info("Player Beacon (emitter-only) initialized. Relay: {}", config.serverUrl);
 	}
 
 	private void onClientTick(MinecraftClient mc) {

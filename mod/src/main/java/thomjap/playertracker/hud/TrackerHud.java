@@ -20,17 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Élément de HUD : dessine une boussole en haut de l'écran et une liste des
- * joueurs suivis (direction + distance).
+ * HUD element: draws a compass at the top of the screen and a list of
+ * tracked players (direction + distance).
  *
- * <p>Conventions Minecraft utilisées :
+ * <p>Minecraft conventions used:
  * <ul>
  *   <li>+X = Est, -X = Ouest, +Z = Sud, -Z = Nord.</li>
- *   <li>Le yaw du joueur vaut 0 vers le Sud (+Z) et augmente vers l'Ouest.</li>
+ *   <li>The player yaw is 0 towards South (+Z) and increases towards West.</li>
  * </ul>
- * On calcule donc le cap d'une cible avec {@code atan2(-dx, dz)}, dans le même
- * repère que le yaw, ce qui rend l'angle relatif {@code cap - yaw} directement
- * exploitable (0 = devant, positif = à droite).
+ * So a target's heading is computed with {@code atan2(-dx, dz)}, in the same
+ * frame as the yaw, which makes the relative angle {@code heading - yaw} directly
+ * usable (0 = in front, positive = to the right).
  */
 public class TrackerHud implements HudElement {
 
@@ -53,7 +53,7 @@ public class TrackerHud implements HudElement {
 		final String selfDim = mc.world.getRegistryKey().getValue().toString();
 		final long now = System.currentTimeMillis();
 
-		// Joueurs encore "frais".
+		// Players that are still "fresh".
 		List<TrackedPlayer> visible = new ArrayList<>();
 		for (TrackedPlayer tp : relay.players.values()) {
 			if (now - tp.lastUpdateMs <= cfg.staleTimeoutMs) {
@@ -61,13 +61,13 @@ public class TrackerHud implements HudElement {
 			}
 		}
 
-		// Waypoints à afficher : les miens + ceux partagés par les autres (non masqués).
+		// Waypoints to display: mine + those shared by others (not hidden).
 		List<Waypoint> wps = Waypoints.visible(selfDim);
 
 		TextRenderer tr = mc.textRenderer;
 		int screenW = context.getScaledWindowWidth();
 
-		// -------- Indicateur de connexion (déplaçable + à l'échelle) --------
+		// -------- Connection indicator (movable + to scale) --------
 		if (cfg.showStatus) {
 			boolean connected = relay.isConnected();
 			Text label = connected
@@ -79,17 +79,17 @@ public class TrackerHud implements HudElement {
 			context.drawTextWithShadow(tr, label, sx + 11, sy, connected ? 0xFFBFBFBF : 0xFFE08585);
 		}
 
-		// -------- Boussole (haut, centrée) --------
+		// -------- Compass (top, centered) --------
 		if (cfg.showCompass) {
 			int barW = Math.min(240, screenW - 20);
 			int barX = cfg.compassX >= 0 ? cfg.compassX : (screenW - barW) / 2;
-			barX = Math.max(0, Math.min(barX, screenW - barW)); // reste à l'écran
+			barX = Math.max(0, Math.min(barX, screenW - barW)); // stays on screen
 			int barY = cfg.compassY;
 			int barH = 12;
 			context.fill(barX, barY, barX + barW, barY + barH, 0x80000000);
 
 			for (TrackedPlayer tp : visible) {
-				if (tp.dim.equals(selfDim)) { // même dimension seulement
+				if (tp.dim.equals(selfDim)) { // same dimension only
 					drawCompassMarker(context, barX, barY, barW, barH, px, pz, yaw, tp.x, tp.z, colorFor(tp.name));
 				}
 			}
@@ -97,12 +97,12 @@ public class TrackerHud implements HudElement {
 				drawCompassMarker(context, barX, barY, barW, barH, px, pz, yaw, w.x, w.z, w.color);
 			}
 
-			// Repère central = direction du regard.
+			// Center marker = look direction.
 			int cx = barX + barW / 2;
 			context.fill(cx, barY - 2, cx + 1, barY + barH + 2, 0xFFFFFFFF);
 		}
 
-		// -------- Liste (à gauche) --------
+		// -------- List (left) --------
 		if (cfg.showList && (!visible.isEmpty() || !wps.isEmpty())) {
 			visible.sort((a, b) -> Double.compare(dist2(px, pz, a.x, a.z), dist2(px, pz, b.x, b.z)));
 
@@ -117,14 +117,14 @@ public class TrackerHud implements HudElement {
 					context.drawTextWithShadow(tr,
 							targetLine(px, pz, yaw, tp.x, tp.z, tp.name, coords), lx, ly, colorFor(tp.name));
 				} else {
-					// Pastille couleur de la dimension + nom + (coords) + dimension.
+					// Dimension color dot + name + (coords) + dimension.
 					dot(context, lx, ly, 7, Dimensions.color(tp.dim));
 					context.drawTextWithShadow(tr, tp.name + coords + "  " + Dimensions.name(tp.dim), lx + 11, ly, Dimensions.color(tp.dim));
 				}
 				ly += 11;
 			}
 
-			// Waypoints (points de repère personnels), avec leur couleur.
+			// Waypoints (personal markers), with their color.
 			for (Waypoint w : wps) {
 				String dn = w.owner != null ? w.name + " (" + w.owner + ")" : w.name;
 				context.drawTextWithShadow(tr,
@@ -135,7 +135,7 @@ public class TrackerHud implements HudElement {
 		}
 	}
 
-	/** Petit carré plein avec contour noir (pastille de dimension / indicateur). */
+	/** Small filled square with a black outline (dimension dot / indicator). */
 	private static void dot(DrawContext ctx, int x, int y, int size, int fill) {
 		ctx.fill(x, y, x + size, y + size, fill);
 		ctx.fill(x, y, x + size, y + 1, 0xFF000000);
@@ -144,28 +144,28 @@ public class TrackerHud implements HudElement {
 		ctx.fill(x + size - 1, y, x + size, y + size, 0xFF000000);
 	}
 
-	/** Distance horizontale au carré entre (px,pz) et (x,z). */
+	/** Squared horizontal distance between (px,pz) and (x,z). */
 	private static double dist2(double px, double pz, double x, double z) {
 		double dx = x - px;
 		double dz = z - pz;
 		return dx * dx + dz * dz;
 	}
 
-	/** Suffixe " (x y z)" si l'affichage des coordonnées est activé. */
+	/** " (x y z)" suffix if coordinate display is enabled. */
 	private static String coordsSuffix(TrackerConfig cfg, double x, double y, double z) {
 		return cfg.showCoords ? String.format(" (%d %d %d)", (int) x, (int) y, (int) z) : "";
 	}
 
-	/** Dessine sur la boussole un repère vers une cible, à sa direction relative. */
+	/** Draws a marker on the compass towards a target, at its relative direction. */
 	private static void drawCompassMarker(DrawContext ctx, int barX, int barY, int barW, int barH,
 			double px, double pz, float yaw, double tx, double tz, int color) {
 		double rel = MathHelper.wrapDegrees(bearingTo(px, pz, tx, tz) - yaw);
-		double clamped = Math.max(-90, Math.min(90, rel)); // au-delà, on colle aux bords
+		double clamped = Math.max(-90, Math.min(90, rel)); // beyond that, stick to the edges
 		int markerX = barX + (int) ((clamped + 90) / 180.0 * barW);
 		ctx.fill(markerX - 1, barY, markerX + 2, barY + barH, color);
 	}
 
-	/** Ligne de liste « flèche nom (coords) distm cardinal » vers une cible. */
+	/** List line "arrow name (coords) distm cardinal" towards a target. */
 	private static String targetLine(double px, double pz, float yaw,
 			double tx, double tz, String name, String coords) {
 		double bearing = bearingTo(px, pz, tx, tz);
@@ -174,12 +174,12 @@ public class TrackerHud implements HudElement {
 		return String.format("%s %s%s  %dm  %s", arrow(rel), name, coords, (int) dist, cardinal(bearing));
 	}
 
-	/** Cap vers une cible (0 = Sud/+Z), dans le même repère que le yaw joueur. */
+	/** Heading towards a target (0 = South/+Z), in the same frame as the player yaw. */
 	private static double bearingTo(double px, double pz, double tx, double tz) {
 		return Math.toDegrees(Math.atan2(-(tx - px), tz - pz));
 	}
 
-	/** Flèche ASCII 4 directions selon l'angle relatif au regard. */
+	/** 4-direction ASCII arrow based on the angle relative to the look direction. */
 	private static String arrow(double rel) {
 		double a = ((rel % 360) + 360) % 360; // 0..360
 		if (a < 45 || a >= 315) {
@@ -193,7 +193,7 @@ public class TrackerHud implements HudElement {
 		}
 	}
 
-	/** Direction cardinale absolue de la cible (cap 0 = Sud), localisée. */
+	/** Absolute cardinal direction of the target (heading 0 = South), localized. */
 	private static final String[] DIR_KEYS = {
 			"playertracker.dir.s", "playertracker.dir.sw", "playertracker.dir.w", "playertracker.dir.nw",
 			"playertracker.dir.n", "playertracker.dir.ne", "playertracker.dir.e", "playertracker.dir.se"
@@ -204,27 +204,27 @@ public class TrackerHud implements HudElement {
 		return Text.translatable(DIR_KEYS[(int) Math.round(b / 45.0) % 8]).getString();
 	}
 
-	/** Palette de couleurs vives et bien distinctes pour différencier les joueurs. */
+	/** Palette of bright, well-distinguished colors to tell players apart. */
 	private static final int[] PALETTE = {
-			0xFFFF5555, // rouge
-			0xFF55FF55, // vert
-			0xFF5599FF, // bleu
-			0xFFFFFF55, // jaune
+			0xFFFF5555, // red
+			0xFF55FF55, // green
+			0xFF5599FF, // blue
+			0xFFFFFF55, // yellow
 			0xFFFF55FF, // magenta
 			0xFF55FFFF, // cyan
 			0xFFFFAA33, // orange
-			0xFFAA66FF, // violet
+			0xFFAA66FF, // purple
 			0xFF00FFAA, // turquoise
-			0xFFFF88BB, // rose
+			0xFFFF88BB, // pink
 			0xFFBBFF33, // lime
-			0xFF66CCFF, // bleu ciel
-			0xFFFFCC66, // or
-			0xFF33FFCC, // menthe
-			0xFFFF7744, // corail
-			0xFFCC88FF, // lavande
+			0xFF66CCFF, // sky blue
+			0xFFFFCC66, // gold
+			0xFF33FFCC, // mint
+			0xFFFF7744, // coral
+			0xFFCC88FF, // lavender
 	};
 
-	/** Couleur stable et distincte dérivée du pseudo. */
+	/** Stable, distinct color derived from the username. */
 	private static int colorFor(String name) {
 		return PALETTE[Math.floorMod(name.hashCode(), PALETTE.length)];
 	}

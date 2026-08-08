@@ -3,7 +3,7 @@ package thomjap.playertracker.util;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
-/** Identifiants de dimensions et helpers associés (nom lisible, couleur, conversion). */
+/** Dimension identifiers and related helpers (readable name, color, conversion). */
 public final class Dimensions {
 	public static final String OVERWORLD = "minecraft:overworld";
 	public static final String NETHER = "minecraft:the_nether";
@@ -12,13 +12,13 @@ public final class Dimensions {
 	private Dimensions() {
 	}
 
-	/** Dimension du monde client courant (ou overworld par défaut). */
+	/** Dimension of the current client level (or overworld by default). */
 	public static String current() {
 		MinecraftClient mc = MinecraftClient.getInstance();
 		return mc.world != null ? mc.world.getRegistryKey().getValue().toString() : OVERWORLD;
 	}
 
-	/** Nom localisé et lisible d'une dimension. */
+	/** Localized, readable name of a dimension. */
 	public static String name(String dim) {
 		switch (dim) {
 			case OVERWORLD:
@@ -33,17 +33,17 @@ public final class Dimensions {
 		}
 	}
 
-	/** Couleur (ARGB) associée à une dimension. */
+	/** Color (ARGB) associated with a dimension. */
 	public static int color(String dim) {
 		switch (dim) {
 			case OVERWORLD:
-				return 0xFF6DBB5A; // vert
+				return 0xFF6DBB5A; // green
 			case NETHER:
-				return 0xFFD1483B; // rouge
+				return 0xFFD1483B; // red
 			case END:
-				return 0xFFC59BE0; // violet clair
+				return 0xFFC59BE0; // light purple
 			default:
-				return 0xFFAAAAAA; // gris (dimension moddée / inconnue)
+				return 0xFFAAAAAA; // gray (modded / unknown dimension)
 		}
 	}
 }

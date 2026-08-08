@@ -11,7 +11,7 @@ import thomjap.playerbeacon.PlayerBeaconClient;
 import thomjap.playerbeacon.config.BeaconConfig;
 import thomjap.playerbeacon.screen.BeaconConfigScreen;
 
-/** Raccourcis : ouvrir la config (M) et couper/activer la diffusion (non lié). */
+/** Key bindings: open the config (M) and toggle broadcasting (unbound). */
 public final class BeaconKeybind {
 	private static final KeyBinding.Category CATEGORY =
 			KeyBinding.Category.create(Identifier.of(PlayerBeaconClient.MOD_ID, "main"));

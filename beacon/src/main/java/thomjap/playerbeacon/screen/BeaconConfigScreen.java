@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 import thomjap.playerbeacon.PlayerBeaconClient;
 import thomjap.playerbeacon.config.BeaconConfig;
 
-/** Écran de config du beacon (touche M) : URL, salon, pseudo + connexion. */
+/** Beacon config screen (M key): URL, room, username + connection. */
 public class BeaconConfigScreen extends Screen {
 	private TextFieldWidget urlField;
 	private TextFieldWidget roomField;
@@ -93,7 +93,7 @@ public class BeaconConfigScreen extends Screen {
 
 	@Override
 	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-		// Assombrissement simple (pas renderBackground : son flou plante en écran non-pausant).
+		// Simple dim (not renderBackground: its blur crashes on a non-pausing screen).
 		ctx.fill(0, 0, this.width, this.height, 0xC8000000);
 		ctx.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 85, 0xFFFFFFFF);
 

@@ -14,8 +14,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Dessine un faisceau vertical (type beacon) dans le monde à chaque waypoint
- * visible de la dimension courante, via le renderer de faisceau vanilla.
+ * Draws a vertical (beacon-style) beam in the world at every waypoint
+ * visible in the current dimension, using the vanilla beam renderer.
  */
 public final class WaypointBeamRenderer {
 	private WaypointBeamRenderer() {
@@ -25,7 +25,7 @@ public final class WaypointBeamRenderer {
 		WorldRenderEvents.AFTER_ENTITIES.register(ctx -> {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			TrackerConfig cfg = PlayerTrackerClient.config;
-			// Suit le HUD : caché si beams off, HUD désactivé (H) ou masqué (F1).
+			// Follows the HUD: hidden if beams off, HUD disabled (H) or hidden (F1).
 			if (cfg == null || !cfg.showBeams || !cfg.hudEnabled
 					|| mc.world == null || mc.gameRenderer == null || mc.options.hudHidden) {
 				return;

@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Client WebSocket vers le serveur relais.
+ * WebSocket client to the relay server.
  *
- * <p>Utilise {@link java.net.http.WebSocket} (inclus dans le JDK, aucune
- * dépendance supplémentaire). Se reconnecte automatiquement en cas de coupure.
+ * <p>Uses {@link java.net.http.WebSocket} (bundled with the JDK, no extra
+ * dependency). Reconnects automatically on disconnect.
  */
 public class RelayClient {
 	private static final Gson GSON = new Gson();
@@ -46,9 +46,9 @@ public class RelayClient {
 	private volatile boolean shouldRun = false;
 	private volatile WebSocket webSocket;
 
-	/** Positions reçues des autres joueurs, indexées par pseudo. Thread-safe. */
+	/** Positions received from other players, indexed by username. Thread-safe. */
 	public final ConcurrentHashMap<String, TrackedPlayer> players = new ConcurrentHashMap<>();
-	/** Waypoints partagés par les autres membres du salon (snapshot immuable). */
+	/** Waypoints shared by other room members (immutable snapshot). */
 	public volatile List<Waypoint> sharedWaypoints = List.of();
 
 	public RelayClient(TrackerConfig config) {
@@ -93,16 +93,16 @@ public class RelayClient {
 					.whenComplete((ws, err) -> {
 						connecting.set(false);
 						if (err != null) {
-							PlayerTrackerClient.LOGGER.warn("Connexion au relais échouée : {}", err.toString());
+							PlayerTrackerClient.LOGGER.warn("Failed to connect to the relay: {}", err.toString());
 							scheduleReconnect();
 						} else {
 							this.webSocket = ws;
-							PlayerTrackerClient.LOGGER.info("Connecté au relais {}", config.serverUrl);
+							PlayerTrackerClient.LOGGER.info("Connected to the relay {}", config.serverUrl);
 						}
 					});
 		} catch (Exception e) {
 			connecting.set(false);
-			PlayerTrackerClient.LOGGER.warn("Erreur de connexion au relais : {}", e.toString());
+			PlayerTrackerClient.LOGGER.warn("Relay connection error: {}", e.toString());
 			scheduleReconnect();
 		}
 	}
@@ -113,7 +113,7 @@ public class RelayClient {
 		}
 	}
 
-	/** Message JSON de base (type + salon), commun à tous les envois. */
+	/** Base JSON message (type + room), common to all sends. */
 	private JsonObject baseMessage(String type) {
 		JsonObject msg = new JsonObject();
 		msg.addProperty("type", type);
@@ -121,7 +121,7 @@ public class RelayClient {
 		return msg;
 	}
 
-	/** Envoie un message JSON sur la connexion (silencieux si fermée/erreur). */
+	/** Sends a JSON message over the connection (silent if closed/error). */
 	private void send(WebSocket ws, JsonObject msg) {
 		if (ws == null) {
 			return;
@@ -129,13 +129,13 @@ public class RelayClient {
 		try {
 			ws.sendText(GSON.toJson(msg), true);
 		} catch (Exception e) {
-			PlayerTrackerClient.LOGGER.debug("Envoi WebSocket échoué", e);
+			PlayerTrackerClient.LOGGER.debug("WebSocket send failed", e);
 		}
 	}
 
 	/**
-	 * S'abonne au salon sans publier de position (mode furtif) : demande au
-	 * serveur de nous retirer immédiatement du radar des autres.
+	 * Subscribes to the room without publishing a position (stealth mode): asks the
+	 * server to remove us from others' radar immediately.
 	 */
 	public void sendSubscribe() {
 		WebSocket ws = this.webSocket;
@@ -145,14 +145,14 @@ public class RelayClient {
 		send(ws, baseMessage("subscribe"));
 	}
 
-	/** Construit le message des waypoints du joueur (pour la carte web). */
+	/** Builds the player's waypoints message (for the web map). */
 	private JsonObject waypointsMessage() {
 		JsonObject msg = baseMessage("waypoints");
 		msg.addProperty("owner", PlayerTrackerClient.selfName());
 		JsonArray arr = new JsonArray();
 		for (Waypoint w : config.waypoints) {
 			if (!w.shared) {
-				continue; // privé : jamais envoyé
+				continue; // private: never sent
 			}
 			JsonObject o = new JsonObject();
 			o.addProperty("name", w.name);
@@ -167,7 +167,7 @@ public class RelayClient {
 		return msg;
 	}
 
-	/** Envoie (ou met à jour) la liste des waypoints au relais. */
+	/** Sends (or updates) the waypoint list to the relay. */
 	public void sendWaypoints() {
 		WebSocket ws = this.webSocket;
 		if (ws == null || !isConnected()) {
@@ -176,7 +176,7 @@ public class RelayClient {
 		send(ws, waypointsMessage());
 	}
 
-	/** Envoie la position du joueur local au relais. */
+	/** Sends the local player position to the relay. */
 	public void sendPosition(String name, double x, double y, double z, String dim) {
 		WebSocket ws = this.webSocket;
 		if (ws == null || !isConnected()) {
@@ -204,7 +204,7 @@ public class RelayClient {
 				JsonObject p = el.getAsJsonObject();
 				String name = p.get("name").getAsString();
 				if (name.equals(self)) {
-					continue; // on ne se suit pas soi-même
+					continue; // we don't track ourselves
 				}
 				players.put(name, new TrackedPlayer(
 						name,
@@ -216,7 +216,7 @@ public class RelayClient {
 			}
 			players.keySet().removeIf(k -> !seen.contains(k));
 
-			// Waypoints partagés par les autres membres du salon.
+			// Waypoints shared by other room members.
 			List<Waypoint> shared = new ArrayList<>();
 			if (obj.has("waypoints") && obj.get("waypoints").isJsonArray()) {
 				for (var el : obj.getAsJsonArray("waypoints")) {
@@ -224,7 +224,7 @@ public class RelayClient {
 					String owner = o.has("owner") && !o.get("owner").isJsonNull()
 							? o.get("owner").getAsString() : null;
 					if (owner != null && owner.equals(self)) {
-						continue; // les miens sont déjà affichés localement
+						continue; // mine are already shown locally
 					}
 					Waypoint w = new Waypoint(o.get("name").getAsString(),
 							o.get("x").getAsDouble(), o.get("y").getAsDouble(), o.get("z").getAsDouble(),
@@ -235,19 +235,19 @@ public class RelayClient {
 			}
 			sharedWaypoints = List.copyOf(shared);
 		} catch (Exception e) {
-			PlayerTrackerClient.LOGGER.debug("Message invalide : {}", text);
+			PlayerTrackerClient.LOGGER.debug("Invalid message: {}", text);
 		}
 	}
 
-	/** Listener du WebSocket : réassemble les trames et gère les événements. */
+	/** WebSocket listener: reassembles frames and handles events. */
 	private class Listener implements WebSocket.Listener {
 		private final StringBuilder buffer = new StringBuilder();
 
 		@Override
 		public void onOpen(WebSocket webSocket) {
-			// S'abonner au salon : on reçoit les autres même sans partager sa position.
+			// Subscribe to the room: we receive others even without sharing our position.
 			send(webSocket, baseMessage("subscribe"));
-			send(webSocket, waypointsMessage()); // partager ses waypoints (carte web)
+			send(webSocket, waypointsMessage()); // share our waypoints (web map)
 			webSocket.request(1);
 		}
 
@@ -265,7 +265,7 @@ public class RelayClient {
 
 		@Override
 		public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-			PlayerTrackerClient.LOGGER.info("Relais fermé : {} {}", statusCode, reason);
+			PlayerTrackerClient.LOGGER.info("Relay closed: {} {}", statusCode, reason);
 			RelayClient.this.webSocket = null;
 			players.clear();
 			sharedWaypoints = List.of();
@@ -275,7 +275,7 @@ public class RelayClient {
 
 		@Override
 		public void onError(WebSocket ws, Throwable error) {
-			PlayerTrackerClient.LOGGER.warn("Erreur du relais : {}", error.toString());
+			PlayerTrackerClient.LOGGER.warn("Relay error: {}", error.toString());
 			RelayClient.this.webSocket = null;
 			scheduleReconnect();
 		}

@@ -13,10 +13,10 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * Raccourcis clavier : basculer l'affichage du HUD et le partage de position.
+ * Key bindings: toggle the HUD display and position sharing.
  */
 public class TrackerKeybinds {
-	// Depuis MC 1.21.9, les catégories de touches sont identifiées par un Identifier.
+	// Since MC 1.21.9, key categories are identified by an Identifier.
 	private static final KeyBinding.Category CATEGORY =
 			KeyBinding.Category.create(Identifier.of(PlayerTrackerClient.MOD_ID, "main"));
 
@@ -44,7 +44,7 @@ public class TrackerKeybinds {
 				GLFW.GLFW_KEY_N,
 				CATEGORY));
 
-		// Non lié par défaut : à définir dans les options de commandes.
+		// Unbound by default: to be set in the controls options.
 		toggleTracking = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.playertracker.toggle_tracking",
 				InputUtil.Type.KEYSYM,
@@ -62,7 +62,7 @@ public class TrackerKeybinds {
 			cfg.sharePosition = !cfg.sharePosition;
 			cfg.save();
 			if (!cfg.sharePosition) {
-				// Se retirer tout de suite du radar des autres.
+				// Remove ourselves from others' radar right away.
 				PlayerTrackerClient.relay.sendSubscribe();
 			}
 			actionBar(mc, Text.translatable(cfg.sharePosition

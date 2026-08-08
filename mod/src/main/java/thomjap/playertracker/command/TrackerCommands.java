@@ -19,7 +19,7 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 
 /**
  * Commandes client :
- *   /tracker add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [couleur] &lt;name&gt;
+ *   /tracker add waypoint &lt;x&gt; &lt;y&gt; &lt;z&gt; [color] &lt;name&gt;
  *   /tracker remove waypoint &lt;name&gt;
  *   /tracker list
  */
@@ -58,13 +58,13 @@ public final class TrackerCommands {
 								.executes(ctx -> listWaypoints(ctx.getSource())))));
 	}
 
-	/** Action d'ajout de waypoint (x y z couleur nom) → code retour brigadier. */
+	/** Waypoint add action (x y z color name) -> brigadier return code. */
 	@FunctionalInterface
 	private interface WpAction {
 		int run(FabricClientCommandSource src, int x, int y, int z, int color, String name);
 	}
 
-	/** Sous-arbre commun aux commandes add : x y z [couleur] nom, avec action au choix. */
+	/** Shared sub-tree for the add commands: x y z [color] name, with a chosen action. */
 	private static LiteralArgumentBuilder<FabricClientCommandSource> branch(String sub, WpAction action) {
 		return literal(sub).then(argument("x", IntegerArgumentType.integer())
 				.then(argument("y", IntegerArgumentType.integer())
@@ -86,13 +86,13 @@ public final class TrackerCommands {
 												StringArgumentType.getString(ctx, "name")))))));
 	}
 
-	/** Convertit une couleur de chat (Formatting) en ARGB opaque. */
+	/** Converts a chat color (Formatting) to opaque ARGB. */
 	private static int rgb(Formatting formatting) {
 		Integer c = formatting.getColorValue();
 		return c != null ? (0xFF000000 | c) : Waypoint.DEFAULT_COLOR;
 	}
 
-	/** Ajoute (ou remplace) un waypoint dans une dimension donnée. */
+	/** Adds (or replaces) a waypoint in a given dimension. */
 	private static void addOne(TrackerConfig cfg, String name, int x, int y, int z, String dim, int color, boolean shared) {
 		cfg.waypoints.removeIf(w -> w.name.equalsIgnoreCase(name) && w.dim.equals(dim));
 		Waypoint w = new Waypoint(name, x + 0.5, y, z + 0.5, dim, color);
@@ -110,8 +110,8 @@ public final class TrackerCommands {
 	}
 
 	/**
-	 * Waypoint « lié » Overworld ↔ Nether, forcé partagé : crée le point dans la
-	 * dimension courante ET son équivalent dans l'autre monde (÷8 OW→Nether, ×8 Nether→OW).
+	 * "Linked" Overworld <-> Nether waypoint, forced shared: creates the point in
+	 * the current dimension AND its equivalent in the other world (/8 OW->Nether, x8 Nether->OW).
 	 */
 	private static int addCalcWaypoint(FabricClientCommandSource src, int x, int y, int z, int color, String name) {
 		TrackerConfig cfg = PlayerTrackerClient.config;
