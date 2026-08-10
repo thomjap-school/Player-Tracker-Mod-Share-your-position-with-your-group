@@ -2,7 +2,10 @@ package thomjap.playertracker.input;
 
 import thomjap.playertracker.PlayerTrackerClient;
 import thomjap.playertracker.config.TrackerConfig;
+import thomjap.playertracker.crate.CrateWatcher;
+import thomjap.playertracker.model.Waypoint;
 import thomjap.playertracker.screen.HudEditScreen;
+import thomjap.playertracker.util.Dimensions;
 
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
@@ -12,6 +15,9 @@ import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Key bindings: toggle the HUD display and position sharing.
  */
@@ -20,10 +26,14 @@ public class TrackerKeybinds {
 	private static final KeyMapping.Category CATEGORY =
 			KeyMapping.Category.register(Identifier.fromNamespaceAndPath(PlayerTrackerClient.MOD_ID, "main"));
 
+	/** Crate waypoints within this distance (blocks) can be cleared with the keybind. */
+	private static final double CRATE_CLEAR_RANGE = 8.0;
+
 	private static KeyMapping toggleHud;
 	private static KeyMapping toggleTracking;
 	private static KeyMapping toggleSharing;
 	private static KeyMapping openEditor;
+	private static KeyMapping removeCrate;
 
 	public static void register() {
 		toggleHud = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -47,6 +57,13 @@ public class TrackerKeybinds {
 		// Unbound by default: to be set in the controls options.
 		toggleTracking = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 				"key.playertracker.toggle_tracking",
+				InputConstants.Type.KEYSYM,
+				GLFW.GLFW_KEY_UNKNOWN,
+				CATEGORY));
+
+		// Unbound by default: clears crate waypoints within 8 blocks.
+		removeCrate = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+				"key.playertracker.remove_crate",
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_UNKNOWN,
 				CATEGORY));
@@ -88,6 +105,44 @@ public class TrackerKeybinds {
 					? "playertracker.msg.tracking_on"
 					: "playertracker.msg.tracking_off"));
 		}
+		while (removeCrate.consumeClick()) {
+			removeNearbyCrates(mc);
+		}
+	}
+
+	/** Removes crate waypoints within {@link #CRATE_CLEAR_RANGE} blocks (3D) of the player. */
+	private static void removeNearbyCrates(Minecraft mc) {
+		if (mc.player == null || mc.level == null) {
+			return;
+		}
+		TrackerConfig cfg = PlayerTrackerClient.config;
+		double px = mc.player.getX();
+		double py = mc.player.getY();
+		double pz = mc.player.getZ();
+		String dim = Dimensions.current();
+		double maxSq = CRATE_CLEAR_RANGE * CRATE_CLEAR_RANGE;
+
+		List<Waypoint> toRemove = new ArrayList<>();
+		for (Waypoint w : cfg.waypoints) {
+			if (!CrateWatcher.TAG.equals(w.tag) || !w.dim.equals(dim)) {
+				continue;
+			}
+			double dx = w.x - px;
+			double dy = w.y - py;
+			double dz = w.z - pz;
+			if (dx * dx + dy * dy + dz * dz <= maxSq) {
+				toRemove.add(w);
+			}
+		}
+
+		if (toRemove.isEmpty()) {
+			actionBar(mc, Component.translatable("playertracker.crate.none_nearby"));
+			return;
+		}
+		cfg.waypoints.removeAll(toRemove);
+		cfg.save();
+		PlayerTrackerClient.syncWaypoints();
+		actionBar(mc, Component.translatable("playertracker.crate.removed", toRemove.size()));
 	}
 
 	private static void actionBar(Minecraft mc, Component text) {
