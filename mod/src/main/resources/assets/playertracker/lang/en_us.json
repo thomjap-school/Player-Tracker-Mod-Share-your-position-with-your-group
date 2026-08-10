@@ -4,7 +4,7 @@
 	"key.playertracker.open_editor": "Move HUD elements",
 	"key.playertracker.toggle_sharing": "Stealth mode (see without being seen)",
 	"key.playertracker.toggle_tracking": "Toggle position sharing",
-	"key.playertracker.remove_crate": "Clear nearby crate waypoint (≤ 8 blocks)",
+	"key.playertracker.remove_crate": "Clear nearby waypoint (≤ 8 blocks)",
 
 	"playertracker.hud.list_header": "Tracked players:",
 	"playertracker.status.online": "Tracker  %s",
@@ -86,6 +86,6 @@
 	"playertracker.cmd.beams_on": "Waypoint beams enabled",
 	"playertracker.cmd.beams_off": "Waypoint beams disabled",
 	"playertracker.crate.added": "%s crate added (%s %s %s)",
-	"playertracker.crate.removed": "Cleared %s crate waypoint(s) nearby",
-	"playertracker.crate.none_nearby": "No crate waypoint within 8 blocks"
+	"playertracker.crate.removed": "Cleared %s nearby waypoint(s)",
+	"playertracker.crate.none_nearby": "No waypoint within 8 blocks"
 }
