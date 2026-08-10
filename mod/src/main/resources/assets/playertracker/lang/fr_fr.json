@@ -4,6 +4,7 @@
 	"key.playertracker.open_editor": "Déplacer les éléments du HUD",
 	"key.playertracker.toggle_sharing": "Mode furtif (voir sans être vu)",
 	"key.playertracker.toggle_tracking": "Activer/désactiver le partage de position",
+	"key.playertracker.remove_crate": "Retirer le waypoint de caisse proche (≤ 8 blocs)",
 
 	"playertracker.hud.list_header": "Joueurs suivis :",
 	"playertracker.status.online": "Tracker  %s",
@@ -84,5 +85,7 @@
 	"playertracker.cmd.caisses_off": "Waypoints de caisses désactivés",
 	"playertracker.cmd.beams_on": "Faisceaux activés",
 	"playertracker.cmd.beams_off": "Faisceaux désactivés",
-	"playertracker.crate.added": "Caisse %s ajoutée (%s %s %s)"
+	"playertracker.crate.added": "Caisse %s ajoutée (%s %s %s)",
+	"playertracker.crate.removed": "%s waypoint(s) de caisse retiré(s) à proximité",
+	"playertracker.crate.none_nearby": "Aucun waypoint de caisse à moins de 8 blocs"
 }
