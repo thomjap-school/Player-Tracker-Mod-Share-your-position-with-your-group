@@ -25,6 +25,14 @@ app = FastAPI(title="Player Tracker Relay")
 # On considère un joueur "hors ligne" s'il n'a pas envoyé de position depuis ce délai.
 STALE_SECONDS = 20
 
+# Jetons de rôle opaques. On se connecte sur /r/{token} ; le token détermine le
+# rôle (tracker duplex ou beacon write-only). Comme les deux sont des chaînes
+# aléatoires indépendantes, on ne peut PAS deviner l'un depuis l'autre : le lien
+# beacon ne révèle rien du lien tracker.
+from relaykeys import load as _load_keys
+
+TRACKER_KEY, BEACON_KEY = _load_keys()
+
 # room -> { name -> {x, y, z, dim, ts} }
 rooms: Dict[str, Dict[str, dict]] = {}
 # websocket -> (room, name)
@@ -117,16 +125,19 @@ async def health():
 
 
 @app.get("/map")
-async def live_map():
-    """Carte web live : abonnée en lecture seule à un salon (?room=...)."""
+async def live_map(k: str = ""):
+    """Carte web live d'un salon (?room=...&k=<TRACKER_KEY>).
+    Protégée par le jeton tracker (elle montre les positions de tout le monde)."""
+    if k != TRACKER_KEY:
+        return JSONResponse({"error": "forbidden"}, status_code=403)
     return FileResponse(MAP_HTML, media_type="text/html")
 
 
 async def relay_loop(ws: WebSocket, beacon: bool) -> None:
-    """Boucle de relais partagée par les deux endpoints.
+    """Boucle de relais partagée par les deux rôles (voir /r/{key}).
 
-    beacon=False (lien Tracker, /ws) : duplex complet (voir + être vu).
-    beacon=True  (lien Beacon,  /beacon) : émetteur seul, imposé côté serveur.
+    beacon=False (jeton tracker) : duplex complet (voir + être vu).
+    beacon=True  (jeton beacon)  : émetteur seul, imposé côté serveur.
     La connexion alimente la room (sa position est visible des trackers) mais ne
     reçoit JAMAIS le roster — même avec le mod Tracker sur ce lien, on ne voit
     personne. Les messages "subscribe" (mode furtif, réception) sont ignorés."""
@@ -227,14 +238,16 @@ async def relay_loop(ws: WebSocket, beacon: bool) -> None:
         await cleanup(ws)
 
 
-@app.websocket("/ws")
-async def ws_endpoint(ws: WebSocket):
-    """Lien Tracker : duplex complet (voir + être vu)."""
-    await relay_loop(ws, beacon=False)
-
-
-@app.websocket("/beacon")
-async def beacon_endpoint(ws: WebSocket):
-    """Lien Beacon : émetteur seul (write-only), imposé côté serveur.
-    Distribue ce lien aux gens que tu veux suivre sans qu'ils voient les autres."""
-    await relay_loop(ws, beacon=True)
+@app.websocket("/r/{key}")
+async def relay_endpoint(ws: WebSocket, key: str):
+    """Endpoint unique à jeton opaque. Le jeton détermine le rôle :
+      - TRACKER_KEY -> duplex complet (voir + être vu),
+      - BEACON_KEY  -> émetteur seul (write-only, imposé côté serveur).
+    Tout autre jeton est refusé. On ne peut pas deviner un rôle depuis l'autre,
+    donc distribuer le lien beacon ne révèle jamais le lien tracker."""
+    if key == TRACKER_KEY:
+        await relay_loop(ws, beacon=False)
+    elif key == BEACON_KEY:
+        await relay_loop(ws, beacon=True)
+    else:
+        await ws.close(code=1008)

@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import thomjap.playerbeacon.PlayerBeaconClient;
 import thomjap.playerbeacon.config.BeaconConfig;
 import thomjap.playerbeacon.model.Waypoint;
+import thomjap.playerbeacon.util.LinkCrypto;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -73,7 +74,7 @@ public class BeaconRelay {
 		try {
 			httpClient.newWebSocketBuilder()
 					.connectTimeout(Duration.ofSeconds(10))
-					.buildAsync(URI.create(config.serverUrl), new Listener())
+					.buildAsync(URI.create(LinkCrypto.decode(config.serverUrl)), new Listener())
 					.whenComplete((ws, err) -> {
 						connecting.set(false);
 						if (err != null) {

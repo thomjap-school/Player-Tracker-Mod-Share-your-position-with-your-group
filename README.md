@@ -217,16 +217,22 @@ cd server && cp .env.example .env      # then put your domain in .env
 > `server/.env` (your domain, your local settings) is **not** versioned — the
 > `.env.example` serves as the template.
 
-Both scripts print **two links** (same relay, same room) — paste the right one in
-**M → Server & room…**:
+Both scripts print **three links** (same relay, same room) — paste the right one
+in **M → Server & room…**:
 
-- **Player Tracker** → `wss://…/ws` — full duplex (see others *and* be seen).
-  Keep this one inside your trusted group.
-- **Player Beacon** → `wss://…/beacon` — **emitter-only, enforced server-side**:
-  this connection can broadcast its position (visible to trackers) but the server
-  **never** sends back anyone's position. So it's safe to hand out to people you
-  want to *track* without letting them see the others — **even if they install
-  the Tracker mod on this link, they see nobody**.
+- **Player Tracker** → `wss://…/r/<token>` — full duplex (see others *and* be
+  seen). Keep it inside your trusted group; the token is the secret.
+- **Player Beacon** → `beacon:<encrypted>` — an **encrypted** link that only the
+  Player Beacon mod can decode. Safe to hand out to people you want to *track*
+  without letting them see the others, for two reasons:
+  1. **Server-enforced write-only**: this role can broadcast its position
+     (visible to trackers) but the server **never** sends back anyone's position —
+     even the Tracker mod on this link sees nobody.
+  2. **Encrypted**: the recipient can't read the host nor turn it into the
+     Tracker link (the roles use independent random tokens; you can't derive one
+     from the other).
+- **Web map** → `https://…/map?room=…&k=<token>` — requires the tracker token
+  (it shows everyone's position).
 
 Keep the window open during the game.
 
