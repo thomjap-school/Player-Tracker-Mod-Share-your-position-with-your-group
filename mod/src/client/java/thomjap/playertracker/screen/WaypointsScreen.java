@@ -32,7 +32,7 @@ public class WaypointsScreen extends BaseTrackerScreen {
 
 	private static final String[] TAB_KEYS = {
 			"playertracker.waypoints.tab_all", "playertracker.waypoints.tab_private",
-			"playertracker.waypoints.tab_shared", "playertracker.waypoints.tab_crates"
+			"playertracker.waypoints.tab_shared"
 	};
 
 	private int tab = 0;
@@ -56,11 +56,9 @@ public class WaypointsScreen extends BaseTrackerScreen {
 			case 1:
 				return !w.shared && !CrateWatcher.TAG.equals(w.tag);
 			case 2:
-				return w.shared;
-			case 3:
-				return CrateWatcher.TAG.equals(w.tag);
+				return w.shared && !CrateWatcher.TAG.equals(w.tag);
 			default:
-				return true;
+				return !CrateWatcher.TAG.equals(w.tag);
 		}
 	}
 
@@ -104,8 +102,8 @@ public class WaypointsScreen extends BaseTrackerScreen {
 		int lx = listX();
 		int lw = listW();
 
-		int tabW = lw / 4 - 3;
-		for (int t = 0; t < 4; t++) {
+		int tabW = lw / 3 - 3;
+		for (int t = 0; t < 3; t++) {
 			final int tt = t;
 			Button btn = Button.builder(Component.translatable(TAB_KEYS[t]), b -> {
 				tab = tt;

@@ -43,9 +43,6 @@ public final class TrackerCommands {
 								.then(argument("name", StringArgumentType.greedyString())
 										.executes(ctx -> shareWaypoint(ctx.getSource(),
 												StringArgumentType.getString(ctx, "name"))))))
-						.then(literal("caisses")
-								.then(literal("on").executes(ctx -> setCrates(ctx.getSource(), true)))
-								.then(literal("off").executes(ctx -> setCrates(ctx.getSource(), false))))
 						.then(literal("beams")
 								.then(literal("on").executes(ctx -> setBeams(ctx.getSource(), true)))
 								.then(literal("off").executes(ctx -> setBeams(ctx.getSource(), false))))
@@ -139,14 +136,6 @@ public final class TrackerCommands {
 		PlayerTrackerClient.syncWaypoints();
 		src.sendFeedback(Component.translatable(
 				found.shared ? "playertracker.cmd.shared" : "playertracker.cmd.unshared", name));
-		return 1;
-	}
-
-	private static int setCrates(FabricClientCommandSource src, boolean on) {
-		TrackerConfig cfg = PlayerTrackerClient.config;
-		cfg.crateWaypoints = on;
-		cfg.save();
-		src.sendFeedback(Component.translatable(on ? "playertracker.cmd.caisses_on" : "playertracker.cmd.caisses_off"));
 		return 1;
 	}
 

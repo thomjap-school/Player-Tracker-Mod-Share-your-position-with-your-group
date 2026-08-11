@@ -4,7 +4,6 @@
 	"key.playertracker.open_editor": "Déplacer les éléments du HUD",
 	"key.playertracker.toggle_sharing": "Mode furtif (voir sans être vu)",
 	"key.playertracker.toggle_tracking": "Activer/désactiver le partage de position",
-	"key.playertracker.remove_crate": "Retirer le waypoint proche (≤ 8 blocs)",
 
 	"playertracker.hud.list_header": "Joueurs suivis :",
 	"playertracker.status.online": "Tracker  %s",
@@ -77,15 +76,20 @@
 	"playertracker.waypoints.tab_all": "Tous",
 	"playertracker.waypoints.tab_private": "Privés",
 	"playertracker.waypoints.tab_shared": "Partagés",
-	"playertracker.waypoints.tab_crates": "Caisses",
 
 	"playertracker.cmd.shared": "Waypoint « %s » partagé",
 	"playertracker.cmd.unshared": "Waypoint « %s » repassé privé",
-	"playertracker.cmd.caisses_on": "Waypoints de caisses activés",
-	"playertracker.cmd.caisses_off": "Waypoints de caisses désactivés",
 	"playertracker.cmd.beams_on": "Faisceaux activés",
 	"playertracker.cmd.beams_off": "Faisceaux désactivés",
 	"playertracker.crate.added": "Caisse %s ajoutée (%s %s %s)",
 	"playertracker.crate.removed": "%s waypoint(s) proche(s) retiré(s)",
-	"playertracker.crate.none_nearby": "Aucun waypoint à moins de 8 blocs"
+	"playertracker.crate.none_nearby": "Aucun waypoint à moins de 8 blocs",
+
+	"playertracker.crates.title": "Réglages caisses",
+	"playertracker.crates.detection": "Détection : %s",
+	"playertracker.crates.key": "Touche clear : %s",
+	"playertracker.crates.press": "Appuie sur une touche…  (Échap annuler · Suppr aucune)",
+	"playertracker.crates.none": "Aucune",
+	"playertracker.crates.empty": "Aucun waypoint de caisse",
+	"playertracker.crates.clear_all": "Tout supprimer"
 }

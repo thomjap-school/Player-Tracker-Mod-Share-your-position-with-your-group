@@ -33,7 +33,9 @@ public class TrackerKeybinds {
 	private static KeyMapping toggleTracking;
 	private static KeyMapping toggleSharing;
 	private static KeyMapping openEditor;
-	private static KeyMapping removeCrate;
+
+	/** Edge-detection state for the custom (hidden) crate-clear key. */
+	private static boolean crateKeyWasDown = false;
 
 	public static void register() {
 		toggleHud = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -60,13 +62,8 @@ public class TrackerKeybinds {
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_UNKNOWN,
 				CATEGORY));
-
-		// Unbound by default: clears crate waypoints within 8 blocks.
-		removeCrate = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-				"key.playertracker.remove_crate",
-				InputConstants.Type.KEYSYM,
-				GLFW.GLFW_KEY_UNKNOWN,
-				CATEGORY));
+		// Note: the crate-clear key is intentionally NOT a vanilla KeyMapping.
+		// It is a custom key polled below, configurable only from the hidden menu.
 	}
 
 	public static void handle(Minecraft mc) {
@@ -105,9 +102,15 @@ public class TrackerKeybinds {
 					? "playertracker.msg.tracking_on"
 					: "playertracker.msg.tracking_off"));
 		}
-		while (removeCrate.consumeClick()) {
+		// Custom (hidden) crate-clear key: raw polling with edge detection.
+		// Only when no screen is open, so it never fires while typing/rebinding.
+		int key = cfg.crateClearKey;
+		boolean down = key >= 0 && mc.gui.screen() == null
+				&& InputConstants.isKeyDown(mc.getWindow(), key);
+		if (down && !crateKeyWasDown) {
 			removeNearbyCrates(mc);
 		}
+		crateKeyWasDown = down;
 	}
 
 	/** Removes crate waypoints within {@link #CRATE_CLEAR_RANGE} blocks (3D) of the player. */
