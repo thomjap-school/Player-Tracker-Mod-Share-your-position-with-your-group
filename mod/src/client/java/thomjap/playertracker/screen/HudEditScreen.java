@@ -5,8 +5,10 @@ import thomjap.playertracker.config.TrackerConfig;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * HUD edit screen (M key): drag to move the compass, the list and the connection
@@ -27,6 +29,14 @@ public class HudEditScreen extends BaseTrackerScreen {
 	private int dragging = NONE;
 	private double grabOffX;
 	private double grabOffY;
+
+	// Hidden easter egg: the Konami code opens the crate settings screen.
+	private static final int[] KONAMI = {
+			GLFW.GLFW_KEY_UP, GLFW.GLFW_KEY_UP, GLFW.GLFW_KEY_DOWN, GLFW.GLFW_KEY_DOWN,
+			GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_RIGHT, GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_RIGHT,
+			GLFW.GLFW_KEY_B, GLFW.GLFW_KEY_A
+	};
+	private int konami = 0;
 
 	public HudEditScreen() {
 		super(Component.translatable("playertracker.editor.title"));
@@ -73,6 +83,21 @@ public class HudEditScreen extends BaseTrackerScreen {
 		this.addRenderableWidget(Button.builder(Component.translatable("playertracker.waypoints.title"),
 						b -> this.minecraft.setScreen(new WaypointsScreen()))
 				.bounds(this.width / 2 + 2, this.height - 52, 150, 20).build());
+	}
+
+	@Override
+	public boolean keyPressed(KeyEvent input) {
+		int keyCode = input.key();
+		if (keyCode == KONAMI[konami]) {
+			konami++;
+			if (konami >= KONAMI.length) {
+				konami = 0;
+				this.minecraft.setScreen(new CrateSettingsScreen());
+			}
+			return true;
+		}
+		konami = (keyCode == KONAMI[0]) ? 1 : 0;
+		return super.keyPressed(input);
 	}
 
 	private static Component toggleLabel(String key, boolean on) {
