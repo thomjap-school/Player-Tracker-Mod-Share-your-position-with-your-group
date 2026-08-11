@@ -1,6 +1,7 @@
 # --- Secrets / config locale (NE JAMAIS committer) ---
 .env
 *.local
+server/.relaykeys
 
 # --- Gradle / Fabric mods (le wrapper gradlew + gradle/ est gardé) ---
 mod/.gradle/
