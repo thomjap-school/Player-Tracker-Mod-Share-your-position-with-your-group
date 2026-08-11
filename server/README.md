@@ -13,7 +13,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 - `GET /` → health check (`{"status":"ok","rooms":N,"players":M}`).
 - `GET /map?room=<room>` → **live web map** (standalone HTML page, `map.html`).
-- `WS /ws` → real-time entry point.
+- `WS /ws` → **Tracker** link: full duplex (send position + receive others).
+- `WS /beacon` → **Beacon** link: emitter-only, **enforced server-side**. Feeds the
+  same rooms (visible to trackers) but never receives the roster — so even the
+  Tracker mod on this link sees nobody. Hand this link to people you want to track.
 
 > ⚠️ Uvicorn is **not** started with `--reload`: after any change to `main.py`,
 > stop it (`Ctrl+C`) and restart it to apply the changes.

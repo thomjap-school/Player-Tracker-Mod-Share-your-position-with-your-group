@@ -54,13 +54,18 @@ echo
 if [ -z "$URL" ]; then
 	echo "!! URL pas trouvée. Regarde le log du tunnel : $CF_LOG"
 else
-	WSS="wss://${URL#https://}/ws"
+	BASE="wss://${URL#https://}"
 	echo "=================================================================="
-	echo "  URL à coller dans le mod (toi + tes potes) :"
+	echo "  Deux liens (même salon) — coller dans M -> Serveur & salon... :"
 	echo
-	echo "      $WSS"
+	echo "   * Player Tracker (voir + etre vu) — garde-le dans ton groupe :"
+	echo "       ${BASE}/ws"
 	echo
-	echo "  (M -> Serveur & salon... -> colle-la, choisis un salon commun)"
+	echo "   * Player Beacon (emetteur seul) — a donner a ceux que tu veux"
+	echo "     suivre SANS qu'ils voient les autres (impose cote serveur,"
+	echo "     meme avec le mod Tracker sur ce lien) :"
+	echo "       ${BASE}/beacon"
+	echo
 	echo "=================================================================="
 fi
 echo
