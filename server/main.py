@@ -13,7 +13,7 @@ Lancer :
 import json
 import os
 import time
-from typing import Dict, Tuple
+from typing import Dict, Set, Tuple
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
@@ -33,6 +33,10 @@ clients: Dict[WebSocket, Tuple[str, str]] = {}
 room_waypoints: Dict[str, Dict[str, list]] = {}
 # websocket -> (room, owner) : pour retirer ses waypoints à la déconnexion
 client_waypoints: Dict[WebSocket, Tuple[str, str]] = {}
+# Connexions "beacon" (émetteur seul) : elles alimentent la room (leur position
+# est visible des trackers) mais ne REÇOIVENT jamais le roster. Imposé côté
+# serveur : même avec le mod Tracker sur ce lien, on ne voit personne.
+beacon_clients: Set[WebSocket] = set()
 
 
 def build_roster(room: str) -> str:
@@ -73,11 +77,12 @@ def _drop_waypoints(room: str, owner: str) -> None:
 
 
 async def broadcast(room: str) -> None:
-    """Envoie la liste des joueurs à tous les clients connectés à cette room."""
+    """Envoie la liste des joueurs à tous les clients d'une room, SAUF les
+    connexions beacon (émetteur seul) qui ne reçoivent jamais le roster."""
     message = build_roster(room)
     dead = []
     for ws, (r, _name) in list(clients.items()):
-        if r != room:
+        if r != room or ws in beacon_clients:
             continue
         try:
             await ws.send_text(message)
@@ -89,6 +94,7 @@ async def broadcast(room: str) -> None:
 
 async def cleanup(ws: WebSocket) -> None:
     """Retire un client déconnecté (position + waypoints) et prévient sa/ses room(s)."""
+    beacon_clients.discard(ws)
     info = clients.pop(ws, None)
     wp = client_waypoints.pop(ws, None)
     to_update = set()
@@ -116,9 +122,17 @@ async def live_map():
     return FileResponse(MAP_HTML, media_type="text/html")
 
 
-@app.websocket("/ws")
-async def ws_endpoint(ws: WebSocket):
+async def relay_loop(ws: WebSocket, beacon: bool) -> None:
+    """Boucle de relais partagée par les deux endpoints.
+
+    beacon=False (lien Tracker, /ws) : duplex complet (voir + être vu).
+    beacon=True  (lien Beacon,  /beacon) : émetteur seul, imposé côté serveur.
+    La connexion alimente la room (sa position est visible des trackers) mais ne
+    reçoit JAMAIS le roster — même avec le mod Tracker sur ce lien, on ne voit
+    personne. Les messages "subscribe" (mode furtif, réception) sont ignorés."""
     await ws.accept()
+    if beacon:
+        beacon_clients.add(ws)
     try:
         while True:
             raw = await ws.receive_text()
@@ -131,7 +145,10 @@ async def ws_endpoint(ws: WebSocket):
 
             # Mode furtif : s'abonner à un salon pour RECEVOIR les autres, sans
             # publier sa propre position (on n'apparaît pas dans le roster).
+            # Ignoré sur le lien beacon (émetteur seul : ne reçoit jamais).
             if msg_type == "subscribe":
+                if beacon:
+                    continue
                 room = str(data.get("room", "default"))[:64]
                 prev = clients.get(ws)
                 # Retire toute identité publiée précédente (même salon inclus) pour
@@ -208,3 +225,16 @@ async def ws_endpoint(ws: WebSocket):
         pass
     finally:
         await cleanup(ws)
+
+
+@app.websocket("/ws")
+async def ws_endpoint(ws: WebSocket):
+    """Lien Tracker : duplex complet (voir + être vu)."""
+    await relay_loop(ws, beacon=False)
+
+
+@app.websocket("/beacon")
+async def beacon_endpoint(ws: WebSocket):
+    """Lien Beacon : émetteur seul (write-only), imposé côté serveur.
+    Distribue ce lien aux gens que tu veux suivre sans qu'ils voient les autres."""
+    await relay_loop(ws, beacon=True)
