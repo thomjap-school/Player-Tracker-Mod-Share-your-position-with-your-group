@@ -4,7 +4,6 @@
 	"key.playertracker.open_editor": "Move HUD elements",
 	"key.playertracker.toggle_sharing": "Stealth mode (see without being seen)",
 	"key.playertracker.toggle_tracking": "Toggle position sharing",
-	"key.playertracker.remove_crate": "Clear nearby waypoint (≤ 8 blocks)",
 
 	"playertracker.hud.list_header": "Tracked players:",
 	"playertracker.status.online": "Tracker  %s",
@@ -77,15 +76,20 @@
 	"playertracker.waypoints.tab_all": "All",
 	"playertracker.waypoints.tab_private": "Private",
 	"playertracker.waypoints.tab_shared": "Shared",
-	"playertracker.waypoints.tab_crates": "Crates",
 
 	"playertracker.cmd.shared": "Waypoint \"%s\" shared",
 	"playertracker.cmd.unshared": "Waypoint \"%s\" set to private",
-	"playertracker.cmd.caisses_on": "Crate waypoints enabled",
-	"playertracker.cmd.caisses_off": "Crate waypoints disabled",
 	"playertracker.cmd.beams_on": "Waypoint beams enabled",
 	"playertracker.cmd.beams_off": "Waypoint beams disabled",
 	"playertracker.crate.added": "%s crate added (%s %s %s)",
 	"playertracker.crate.removed": "Cleared %s nearby waypoint(s)",
-	"playertracker.crate.none_nearby": "No waypoint within 8 blocks"
+	"playertracker.crate.none_nearby": "No waypoint within 8 blocks",
+
+	"playertracker.crates.title": "Crate settings",
+	"playertracker.crates.detection": "Detection: %s",
+	"playertracker.crates.key": "Clear key: %s",
+	"playertracker.crates.press": "Press a key…  (Esc cancel · Del none)",
+	"playertracker.crates.none": "None",
+	"playertracker.crates.empty": "No crate waypoints",
+	"playertracker.crates.clear_all": "Clear all"
 }
