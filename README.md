@@ -217,8 +217,18 @@ cd server && cp .env.example .env      # then put your domain in .env
 > `server/.env` (your domain, your local settings) is **not** versioned — the
 > `.env.example` serves as the template.
 
-In both cases, the printed URL is already `wss://…/ws`, ready to paste into the
-mod (**M → Server & room…**). Keep the window open during the game.
+Both scripts print **two links** (same relay, same room) — paste the right one in
+**M → Server & room…**:
+
+- **Player Tracker** → `wss://…/ws` — full duplex (see others *and* be seen).
+  Keep this one inside your trusted group.
+- **Player Beacon** → `wss://…/beacon` — **emitter-only, enforced server-side**:
+  this connection can broadcast its position (visible to trackers) but the server
+  **never** sends back anyone's position. So it's safe to hand out to people you
+  want to *track* without letting them see the others — **even if they install
+  the Tracker mod on this link, they see nobody**.
+
+Keep the window open during the game.
 
 > For a fully persistent setup (without keeping your PC on), host `server/` on a
 > VPS or Railway/Render over `wss://` — see [server/README.md](server/README.md).

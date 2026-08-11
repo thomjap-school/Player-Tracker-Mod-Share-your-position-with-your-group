@@ -47,11 +47,15 @@ SRV_PID=$!
 trap 'kill "$SRV_PID" 2>/dev/null || true' EXIT INT TERM
 
 echo "=================================================================="
-echo "  URL à coller dans le mod (toi + tes potes) :"
+echo "  Deux liens FIXES (même salon) — M -> Serveur & salon... :"
 echo
-echo "      wss://$DOMAIN/ws"
+echo "   * Player Tracker (voir + etre vu) — garde-le dans ton groupe :"
+echo "       wss://$DOMAIN/ws"
 echo
-echo "  Fixe (ne change plus).  En jeu : M -> Serveur & salon..."
+echo "   * Player Beacon (emetteur seul) — a donner a ceux que tu veux"
+echo "     suivre SANS qu'ils voient les autres (impose cote serveur) :"
+echo "       wss://$DOMAIN/beacon"
+echo
 echo "=================================================================="
 echo "Laisse cette fenetre ouverte pendant que vous jouez. Ctrl+C pour arreter."
 echo
