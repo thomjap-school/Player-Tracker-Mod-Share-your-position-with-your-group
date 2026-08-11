@@ -42,19 +42,29 @@ command -v ngrok >/dev/null 2>&1 || {
 }
 
 # --- serveur en arrière-plan ---
+# Génère/charge les jetons de rôle AVANT tout le reste (évite toute course).
+python3 -c "import relaykeys; relaykeys.load()" >/dev/null 2>&1 || true
 uvicorn main:app --host 0.0.0.0 --port "$PORT" >"$(mktemp)" 2>&1 &
 SRV_PID=$!
 trap 'kill "$SRV_PID" 2>/dev/null || true' EXIT INT TERM
 
+LINKS="$(python3 links.py "$DOMAIN" wss)"
+TRACKER="$(printf '%s\n' "$LINKS" | sed -n 's/^TRACKER //p')"
+BEACON="$(printf '%s\n' "$LINKS" | sed -n 's/^BEACON //p')"
+MAP="$(printf '%s\n' "$LINKS" | sed -n 's/^MAP //p')"
 echo "=================================================================="
-echo "  Deux liens FIXES (même salon) — M -> Serveur & salon... :"
+echo "  Liens FIXES (meme salon) — M -> Serveur & salon... :"
 echo
-echo "   * Player Tracker (voir + etre vu) — garde-le dans ton groupe :"
-echo "       wss://$DOMAIN/ws"
+echo "   * Player Tracker (voir + etre vu) — GARDE-le dans ton groupe :"
+echo "       $TRACKER"
 echo
-echo "   * Player Beacon (emetteur seul) — a donner a ceux que tu veux"
-echo "     suivre SANS qu'ils voient les autres (impose cote serveur) :"
-echo "       wss://$DOMAIN/beacon"
+echo "   * Player Beacon (emetteur seul, CHIFFRE) — a donner a ceux que"
+echo "     tu veux suivre sans qu'ils voient les autres (seul le mod"
+echo "     Beacon decode le lien) :"
+echo "       $BEACON"
+echo
+echo "   * Carte web (protegee par le jeton) :"
+echo "       $MAP"
 echo
 echo "=================================================================="
 echo "Laisse cette fenetre ouverte pendant que vous jouez. Ctrl+C pour arreter."

@@ -32,6 +32,8 @@ if [ ! -x "$CF" ]; then
 fi
 
 # --- démarrage ---
+# Génère/charge les jetons de rôle AVANT tout le reste (évite toute course).
+python3 -c "import relaykeys; relaykeys.load()" >/dev/null 2>&1 || true
 uvicorn main:app --host 0.0.0.0 --port "$PORT" >"$SRV_LOG" 2>&1 &
 SRV_PID=$!
 "$CF" tunnel --url "http://localhost:$PORT" >"$CF_LOG" 2>&1 &
@@ -54,17 +56,25 @@ echo
 if [ -z "$URL" ]; then
 	echo "!! URL pas trouvée. Regarde le log du tunnel : $CF_LOG"
 else
-	BASE="wss://${URL#https://}"
+	HOST="${URL#https://}"
+	LINKS="$(python3 links.py "$HOST" wss)"
+	TRACKER="$(printf '%s\n' "$LINKS" | sed -n 's/^TRACKER //p')"
+	BEACON="$(printf '%s\n' "$LINKS" | sed -n 's/^BEACON //p')"
+	MAP="$(printf '%s\n' "$LINKS" | sed -n 's/^MAP //p')"
 	echo "=================================================================="
-	echo "  Deux liens (même salon) — coller dans M -> Serveur & salon... :"
+	echo "  Liens (meme salon) — coller dans M -> Serveur & salon... :"
 	echo
-	echo "   * Player Tracker (voir + etre vu) — garde-le dans ton groupe :"
-	echo "       ${BASE}/ws"
+	echo "   * Player Tracker (voir + etre vu) — GARDE-le dans ton groupe :"
+	echo "       $TRACKER"
 	echo
 	echo "   * Player Beacon (emetteur seul) — a donner a ceux que tu veux"
-	echo "     suivre SANS qu'ils voient les autres (impose cote serveur,"
-	echo "     meme avec le mod Tracker sur ce lien) :"
-	echo "       ${BASE}/beacon"
+	echo "     suivre SANS qu'ils voient les autres. Le lien est CHIFFRE :"
+	echo "     seul le mod Beacon le decode (impossible de lire le host ni"
+	echo "     de le transformer en lien Tracker) :"
+	echo "       $BEACON"
+	echo
+	echo "   * Carte web (montre tout le monde, protegee par le jeton) :"
+	echo "       $MAP"
 	echo
 	echo "=================================================================="
 fi

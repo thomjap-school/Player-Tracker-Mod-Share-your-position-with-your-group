@@ -44,6 +44,7 @@
 <script>
 const params = new URLSearchParams(location.search);
 let room = (params.get('room') || 'mon-salon').slice(0, 64);
+const key = params.get('k') || '';
 let players = [];
 let waypoints = [];
 let selectedDim = null;
@@ -108,7 +109,7 @@ function shortDim(d) {
 
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(proto + '://' + location.host + '/ws');
+  ws = new WebSocket(proto + '://' + location.host + '/r/' + key);
   ws.onopen = () => {
     setStatus(true, 'connecté');
     ws.send(JSON.stringify({ type: 'subscribe', room }));

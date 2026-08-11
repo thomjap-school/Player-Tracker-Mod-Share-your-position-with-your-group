@@ -12,11 +12,17 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 - `GET /` → health check (`{"status":"ok","rooms":N,"players":M}`).
-- `GET /map?room=<room>` → **live web map** (standalone HTML page, `map.html`).
-- `WS /ws` → **Tracker** link: full duplex (send position + receive others).
-- `WS /beacon` → **Beacon** link: emitter-only, **enforced server-side**. Feeds the
-  same rooms (visible to trackers) but never receives the roster — so even the
-  Tracker mod on this link sees nobody. Hand this link to people you want to track.
+- `WS /r/{token}` → single entry point; the **opaque token** picks the role:
+  - `TRACKER_KEY` → full duplex (send position + receive others).
+  - `BEACON_KEY` → **emitter-only, enforced server-side**: feeds the same rooms
+    (visible to trackers) but never receives the roster — so even the Tracker mod
+    on this token sees nobody. Any other token is refused.
+  The two tokens are independent random strings, generated once and persisted to
+  `.relaykeys` (or set via `TRACKER_KEY` / `BEACON_KEY` env vars). The **Beacon**
+  link handed out is `beacon:<encrypted>` — the real URL is encrypted (see
+  `linkcrypto.py` / the mod's `LinkCrypto`), so recipients can't read it.
+- `GET /map?room=<room>&k=<TRACKER_KEY>` → **live web map** (requires the tracker
+  token; it shows everyone's position).
 
 > ⚠️ Uvicorn is **not** started with `--reload`: after any change to `main.py`,
 > stop it (`Ctrl+C`) and restart it to apply the changes.
