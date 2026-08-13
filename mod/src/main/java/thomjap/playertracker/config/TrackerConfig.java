@@ -59,7 +59,7 @@ public class TrackerConfig {
 	/** Keys (Waypoint.sharedKey) of others' SHARED waypoints hidden from my view. */
 	public List<String> hiddenShared = new ArrayList<>();
 	/** Automatically create a waypoint for non-common event crates. */
-	public boolean crateWaypoints = true;
+	public boolean crateWaypoints = false;
 	/** GLFW key code that clears nearby crate waypoints. -1 = unbound. Set via the hidden menu. */
 	public int crateClearKey = -1;
 	/** Show a 3D beam (beacon-style) at each waypoint (experimental). */
