@@ -47,14 +47,20 @@ echo "Serveur (pid $SRV_PID) + tunnel (pid $CF_PID) démarrés. Recherche de l'U
 # --- récupérer l'URL trycloudflare ---
 URL=""
 for _ in $(seq 1 40); do
-	URL="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$CF_LOG" | head -1 || true)"
+	URL="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$CF_LOG" | grep -vE '://api\.' | head -1 || true)"
 	[ -n "$URL" ] && break
 	sleep 1
 done
 
 echo
 if [ -z "$URL" ]; then
-	echo "!! URL pas trouvée. Regarde le log du tunnel : $CF_LOG"
+	echo "!! Impossible d'obtenir l'URL du tunnel cloudflared."
+	if grep -qiE "failed to request quick Tunnel|certificate is valid for|x509" "$CF_LOG"; then
+		echo "   Ton reseau bloque/intercepte trycloudflare.com (frequent en ecole/entreprise)."
+		echo "   -> Utilise ngrok a la place :  ./start-ngrok.sh"
+	fi
+	echo "   Detail du log ($CF_LOG) :"
+	grep -iE "failed|error|certificate|x509" "$CF_LOG" | tail -3
 else
 	HOST="${URL#https://}"
 	LINKS="$(python3 links.py "$HOST" wss)"
